@@ -1,0 +1,198 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ChecklistItems {
+  id           Int          @id @default(autoincrement())
+  itemKey      String
+  done         Boolean      @default(false)
+  entryDate    String
+  DailyEntries DailyEntries @relation(fields: [entryDate], references: [date], onDelete: Cascade)
+
+  @@unique([entryDate, itemKey])
+  @@index([entryDate])
+}
+
+model DailyEntries {
+  date           String           @id @unique
+  reflection     String           @default("")
+  mood           Int              @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  ChecklistItems ChecklistItems[]
+}
+
+model Experience {
+  id           Int              @id @default(autoincrement())
+  job_title    String
+  company_name String
+  description  String?
+  skills       String[]
+  images       String[]
+  start_date   DateTime
+  end_date     DateTime?
+  is_present   Boolean          @default(false)
+  status       ExperienceStatus @default(ACTIVE)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+}
+
+model LoginAttempt {
+  id            Int       @id @default(autoincrement())
+  ipAddress     String    @unique
+  attemptCount  Int       @default(0)
+  blockedUntil  DateTime?
+  lastAttemptAt DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([ipAddress])
+}
+
+model Personal {
+  id            Int             @id @default(autoincrement())
+  name          String
+  about         String?
+  skills        String[]
+  contacts      Json?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  PersonalImage PersonalImage[]
+}
+
+model PersonalImage {
+  id          Int      @id @default(autoincrement())
+  personalId  Int
+  url         String
+  storagePath String
+  mimeType    String
+  size        Int
+  width       Int?
+  height      Int?
+  caption     String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Personal    Personal @relation(fields: [personalId], references: [id], onDelete: Cascade)
+
+  @@index([order])
+  @@index([personalId])
+}
+
+model Portfolio {
+  id                Int             @id @default(autoincrement())
+  title             String
+  subtitle          String?
+  project_type      String          @default("personal")
+  client_name       String?
+  company_name      String?
+  role              String
+  image             String
+  images            String[]
+  description       String?
+  api_documentation String?
+  features          String[]
+  highlights        String[]
+  challenges        String?
+  solutions         String?
+  story             String?
+  outcomes          String[]
+  skills            String[]
+  repo_links        String[]
+  web_link          String?
+  status            PortfolioStatus @default(ACTIVE)
+  order             Int              @default(0)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([order])
+}
+
+
+model Session {
+  id        String   @id
+  userId    Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+enum ExperienceStatus {
+  ACTIVE
+  NONACTIVE
+}
+
+enum PortfolioStatus {
+  ACTIVE
+  NONACTIVE
+}
+
+enum CertificationStatus {
+  ACTIVE
+  NONACTIVE
+}
+
+enum EducationStatus {
+  ACTIVE
+  NONACTIVE
+}
+
+enum CvStatus {
+  ACTIVE
+  NONACTIVE
+}
+
+model Certification {
+  id            Int                  @id @default(autoincrement())
+  title         String
+  issuer        String
+  issue_date    DateTime
+  expiry_date   DateTime?
+  credential_id String?
+  credential_url String?
+  image         String?
+  skills        String[]
+  status        CertificationStatus  @default(ACTIVE)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+}
+
+model Education {
+  id          Int             @id @default(autoincrement())
+  school      String
+  degree      String
+  field       String
+  start_date  DateTime
+  end_date    DateTime?
+  grade       String?
+  description String?
+  status      EducationStatus  @default(ACTIVE)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model Cv {
+  id          Int      @id @default(autoincrement())
+  name        String
+  file_url    String
+  description String?
+  is_primary  Boolean  @default(false)
+  status      CvStatus  @default(ACTIVE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
