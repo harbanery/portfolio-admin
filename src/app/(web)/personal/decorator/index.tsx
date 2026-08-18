@@ -9,7 +9,7 @@ import { getImagesArray } from "@/utils/helpers/image";
 import { useLocale } from "@/components/locale/LocaleProvider";
 import { skillsOptions } from "@/utils/helpers/skills";
 import { menuContactType } from "@/utils/helpers/menu";
-import { FormLayout } from "@/interfaces/form";
+import { FormLayout } from "@/models/form";
 
 interface PersonalItem {
   id: number;

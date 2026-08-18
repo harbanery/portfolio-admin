@@ -17,7 +17,7 @@ import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import LoaderPage from "@/components/admin/loader";
 import { useLocale } from "@/components/locale/LocaleProvider";
-import { FormLayout } from "@/interfaces/form";
+import { FormLayout } from "@/models/form";
 
 export type CvStatus = "ACTIVE" | "NONACTIVE";
 

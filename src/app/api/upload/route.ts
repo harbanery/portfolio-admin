@@ -18,10 +18,11 @@ function generateUploadSignature(
 export async function POST(request: NextRequest) {
   try {
     const data = await request.formData();
-    const file: File | null = (data.get("file") ||
+    const file: File | null = (data.get("image") ||
+      data.get("file") ||
       data.get("images")) as unknown as File;
 
-    if (!file) {
+    if (!file || !(file instanceof File)) {
       return NextResponse.json(
         { success: false, error: "No file uploaded" },
         { status: 400 },

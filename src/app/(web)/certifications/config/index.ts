@@ -1,4 +1,4 @@
-import { FormLayout } from "@/interfaces/form";
+import { FormLayout } from "@/models/form";
 
 export const formLayout: FormLayout[] = [
   {

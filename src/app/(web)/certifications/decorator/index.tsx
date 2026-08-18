@@ -19,7 +19,7 @@ import LoaderPage from "@/components/admin/loader";
 import { getImageString } from "@/utils/helpers/image";
 import { useLocale } from "@/components/locale/LocaleProvider";
 import { skillsOptions } from "@/utils/helpers/skills";
-import { FormLayout } from "@/interfaces/form";
+import { FormLayout } from "@/models/form";
 
 export type CertificationStatus = "ACTIVE" | "NONACTIVE";
 

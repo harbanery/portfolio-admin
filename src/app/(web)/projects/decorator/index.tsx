@@ -10,7 +10,7 @@ import { skillsOptions } from "@/utils/helpers/skills";
 import { getGithubRepoName } from "@/utils/helpers";
 import { getImageString, getImagesArray } from "@/utils/helpers/image";
 import { useLocale } from "@/components/locale/LocaleProvider";
-import { FormLayout } from "@/interfaces/form";
+import { FormLayout } from "@/models/form";
 import {
   DndContext,
   PointerSensor,
@@ -235,7 +235,9 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     } catch (error: any) {
       notification.error({
         key: "save-error",
-        message: error?.errorFields ? t("notif.validationError") : t("notif.error"),
+        message: error?.errorFields
+          ? t("notif.validationError")
+          : t("notif.error"),
         ...(error?.errorFields
           ? {}
           : {
@@ -273,7 +275,8 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         key: "delete-error",
         message: t("notif.error"),
         description:
-          error?.message || t("notif.deleteFailed", { entity: t("projects.title") }),
+          error?.message ||
+          t("notif.deleteFailed", { entity: t("projects.title") }),
         placement: "bottomRight",
       });
     }
@@ -407,7 +410,9 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     } catch (error: any) {
       notification.error({
         key: "edit-error",
-        message: error?.errorFields ? t("notif.validationError") : t("notif.error"),
+        message: error?.errorFields
+          ? t("notif.validationError")
+          : t("notif.error"),
         ...(error?.errorFields
           ? {}
           : {
@@ -545,9 +550,7 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                           </div>
                           <div>
                             <Tag
-                              color={
-                                item.status === "ACTIVE" ? "green" : "red"
-                              }
+                              color={item.status === "ACTIVE" ? "green" : "red"}
                             >
                               {item.status === "ACTIVE"
                                 ? t("common.active")
@@ -560,7 +563,7 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                           <div onClick={(e) => e.stopPropagation()}>
                             <Image
                               preview={{
-                                toolbarRender: () => [],
+                                actionsRender: () => [],
                               }}
                               src={item.image}
                               alt={item.title}
@@ -568,18 +571,16 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                           </div>
                         )}
 
-                        <div>
-                          <p
-                            className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 text-justify m-0"
-                            dangerouslySetInnerHTML={{
-                              __html:
-                                item.description ??
-                                t("col.description") +
-                                  " - " +
-                                  t("common.optional"),
-                            }}
-                          />
-                        </div>
+                        <div
+                          className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 text-justify m-0"
+                          dangerouslySetInnerHTML={{
+                            __html:
+                              item.description ??
+                              t("col.description") +
+                                " - " +
+                                t("common.optional"),
+                          }}
+                        />
 
                         <div className="flex flex-wrap gap-y-1">
                           {item.skills?.map((skill) => (
@@ -610,8 +611,7 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                                 rel="noopener noreferrer"
                                 className="text-blue-500 text-sm flex items-center gap-1 hover:underline truncate"
                               >
-                                <GithubIcon />{" "}
-                                {getGithubRepoName(link) || link}
+                                <GithubIcon /> {getGithubRepoName(link) || link}
                               </a>
                             ))}
                           </div>
@@ -643,7 +643,11 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
           },
         }}
       >
-        <FormAdmin formProps={{ form }} layout={formLayout} optionList={options} />
+        <FormAdmin
+          formProps={{ form }}
+          layout={formLayout}
+          optionList={options}
+        />
       </Modal>
 
       <Modal

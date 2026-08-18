@@ -186,7 +186,9 @@ const DashboardDecorator = ({ data }: { data: DashboardData | null }) => {
                 title={card.title}
                 value={card.value}
                 prefix={card.prefix}
-                valueStyle={{ color: card.color }}
+                styles={{
+                  content: { color: card.color }
+                }}
               />
             </Card>
           </Col>
@@ -197,7 +199,7 @@ const DashboardDecorator = ({ data }: { data: DashboardData | null }) => {
         <Col xs={24} lg={14}>
           <Card
             title={<Title level={4}>{t("dashboard.chart.activity")}</Title>}
-            bordered={false}
+            variant="borderless"
             className="shadow-sm"
           >
             <div className="h-64 sm:h-80">
@@ -221,7 +223,7 @@ const DashboardDecorator = ({ data }: { data: DashboardData | null }) => {
         <Col xs={24} lg={10}>
           <Card
             title={<Title level={4}>{t("dashboard.chart.status")}</Title>}
-            bordered={false}
+            variant="borderless"
             className="shadow-sm"
           >
             <div className="h-64 sm:h-80">
@@ -253,7 +255,7 @@ const DashboardDecorator = ({ data }: { data: DashboardData | null }) => {
 
       <Card
         title={<Title level={4}>{t("dashboard.recent")}</Title>}
-        bordered={false}
+        variant="borderless"
         className="shadow-sm"
       >
         {data?.recentProjects?.length ? (

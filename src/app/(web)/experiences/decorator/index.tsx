@@ -8,7 +8,7 @@ import dayjs from "dayjs";
 import LoaderPage from "@/components/admin/loader";
 import { getImagesArray } from "@/utils/helpers/image";
 import { useLocale } from "@/components/locale/LocaleProvider";
-import { FormLayout } from "@/interfaces/form";
+import { FormLayout } from "@/models/form";
 
 export type ExperienceStatus = "ACTIVE" | "NONACTIVE";
 

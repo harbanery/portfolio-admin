@@ -17,7 +17,7 @@ import dayjs from "dayjs";
 import LoaderPage from "@/components/admin/loader";
 import { useLocale } from "@/components/locale/LocaleProvider";
 import { skillsOptions } from "@/utils/helpers/skills";
-import { FormLayout } from "@/interfaces/form";
+import { FormLayout } from "@/models/form";
 
 export type EducationStatus = "ACTIVE" | "NONACTIVE";
 

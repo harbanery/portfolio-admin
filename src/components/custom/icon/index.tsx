@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useEffect, useMemo, useState, memo } from "react";
 import { IconBaseProps as AntdIconProps } from "@ant-design/icons/lib/components/Icon";
 import { LoadingOutlined } from "@ant-design/icons";
 
@@ -8,13 +8,13 @@ type DynamicIconLoader<T> = (iconName: string) => React.FC<T>;
 const antdIconCache: Record<string, React.ComponentType<AntdIconProps> | null> = {};
 
 export const loadAntdIcon: DynamicIconLoader<AntdIconProps> = (iconName) => {
-  return React.memo((props) => {
+  const DynamicIconComponent: React.FC<AntdIconProps> = memo((props) => {
     const [IconComponent, setIconComponent] =
       useState<React.ComponentType<AntdIconProps> | null>(
         antdIconCache[iconName] || null,
       );
 
-    React.useEffect(() => {
+    useEffect(() => {
       if (!antdIconCache[iconName]) {
         const loadIcon = async () => {
           try {
@@ -41,4 +41,8 @@ export const loadAntdIcon: DynamicIconLoader<AntdIconProps> = (iconName) => {
       <LoadingOutlined spin className="flex justify-center items-center" />
     );
   });
+
+  DynamicIconComponent.displayName = `DynamicIcon_${iconName}`;
+
+  return DynamicIconComponent;
 };
