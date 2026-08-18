@@ -20,11 +20,6 @@ export const formLayout: FormLayout[] = [
         required: false,
       },
       {
-        name: "skills",
-        type: "select_multiple",
-        required: false,
-      },
-      {
         name: "images",
         type: "image_upload",
         required: false,

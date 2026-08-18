@@ -34,6 +34,11 @@ export const formLayout: FormLayout[] = [
         type: "editor",
         required: false,
       },
+      {
+        name: "courses",
+        type: "select_multiple",
+        required: false,
+      },
     ],
   },
 ];

@@ -181,6 +181,7 @@ model Education {
   end_date    DateTime?
   grade       String?
   description String?
+  courses     String[]
   status      EducationStatus  @default(ACTIVE)
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt

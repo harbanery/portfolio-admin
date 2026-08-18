@@ -151,7 +151,7 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
           icon={<SaveIcon />}
           variant="solid"
           color="geekblue"
-          iconPosition="end"
+          iconPlacement="end"
           size="large"
           loading={loading}
           onClick={handleSave}
@@ -160,7 +160,7 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         </Button>
       </div>
 
-      <Card bordered={false} className="shadow-sm">
+      <Card variant="borderless" className="shadow-sm">
         <FormAdmin formProps={{ form }} layout={formLayout} optionList={options} />
       </Card>
     </section>

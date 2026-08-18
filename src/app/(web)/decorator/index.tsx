@@ -179,7 +179,7 @@ const DashboardDecorator = ({ data }: { data: DashboardData | null }) => {
         {statCards.map((card) => (
           <Col xs={12} sm={12} lg={6} key={card.title}>
             <Card
-              bordered={false}
+              variant="borderless"
               className="shadow-sm hover:shadow-md transition-shadow"
             >
               <Statistic

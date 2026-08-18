@@ -124,7 +124,7 @@ export default function RootLayout({
     <html
       lang="id"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${neueHaasDisplay.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${neueHaasDisplay.variable} h-full antialiased hide-scrollbar`}
     >
       <body className="min-h-full flex flex-col">
         <AntdRegistry>

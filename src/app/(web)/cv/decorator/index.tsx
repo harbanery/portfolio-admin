@@ -249,7 +249,7 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
           icon={<PlusIcon />}
           variant="solid"
           color="geekblue"
-          iconPosition="end"
+          iconPlacement="end"
           size="large"
           onClick={handleAdd}
         >

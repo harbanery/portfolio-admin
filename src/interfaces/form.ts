@@ -15,6 +15,7 @@ export type FormLayout = {
   title?: string;
   /** Translation key untuk judul section (mis. "personal.section.main"). */
   titleKey?: string;
+  hidden?: boolean;
   items: FormLayoutItem[];
 };
 

@@ -16,6 +16,7 @@ import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import LoaderPage from "@/components/admin/loader";
 import { useLocale } from "@/components/locale/LocaleProvider";
+import { skillsOptions } from "@/utils/helpers/skills";
 import { FormLayout } from "@/interfaces/form";
 
 export type EducationStatus = "ACTIVE" | "NONACTIVE";
@@ -29,6 +30,7 @@ interface EducationItem {
   end_date?: string | null;
   grade?: string | null;
   description?: string | null;
+  courses: string[];
   status: EducationStatus;
 }
 
@@ -80,6 +82,7 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       endDate: end?.toISOString() ?? null,
       grade: values.grade,
       description: values.description,
+      courses: values.courses || [],
     };
   };
 
@@ -97,6 +100,7 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       field: item.field,
       grade: item.grade,
       description: item.description,
+      courses: item.courses,
       period: [
         item.start_date ? dayjs(item.start_date) : undefined,
         item.end_date ? dayjs(item.end_date) : undefined,
@@ -245,7 +249,7 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
           icon={<PlusIcon />}
           variant="solid"
           color="geekblue"
-          iconPosition="end"
+          iconPlacement="end"
           size="large"
           onClick={handleAdd}
         >
@@ -344,6 +348,14 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                       dangerouslySetInnerHTML={{ __html: item.description }}
                     />
                   )}
+
+                  {item.courses && item.courses.length > 0 && (
+                    <div className="flex flex-wrap gap-y-1">
+                      {item.courses?.map((course) => (
+                        <Tag key={course}>{course}</Tag>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </Card>
             ))}
@@ -374,7 +386,7 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
           },
         }}
       >
-        <FormAdmin formProps={{ form }} layout={formLayout} />
+        <FormAdmin formProps={{ form }} layout={formLayout} optionList={{ courses: skillsOptions }} />
       </Modal>
     </section>
   );

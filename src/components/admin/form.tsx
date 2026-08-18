@@ -18,6 +18,7 @@ import {
 import DatePicker from "antd/es/date-picker";
 import { InboxOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useLocale } from "@/components/locale/LocaleProvider";
+import { useThemeMode } from "@/components/theme/ThemeProvider";
 import {
   FieldProps,
   FormAdminProps,
@@ -25,18 +26,37 @@ import {
   FormLayoutItem,
 } from "@/interfaces/form";
 
-const GetComponent = (
-  type?: string,
-  name?: any,
-  value?: any,
-  placeholder?: string,
-  disabled?: boolean,
-  Icon?: ReactNode,
-  select?: SelectProps,
-  uploadHint?: { hint: string; subHint: string },
-  formInstance?: import("antd").FormInstance,
-) => {
-  let templatePlaceholder;
+/**
+ * Parameters for GetComponent function
+ */
+interface GetComponentParams {
+  type?: string;
+  name?: any;
+  value?: any;
+  placeholder?: string;
+  disabled?: boolean;
+  Icon?: ReactNode;
+  select?: SelectProps;
+  uploadHint?: { hint: string; subHint: string };
+  formInstance?: import("antd").FormInstance;
+  isDark?: boolean;
+}
+
+const GetComponent = (params: GetComponentParams) => {
+  const {
+    type,
+    name,
+    value,
+    placeholder,
+    disabled,
+    Icon,
+    select,
+    uploadHint,
+    formInstance,
+    isDark,
+  } = params;
+
+  let templatePlaceholder: string | undefined;
   switch (type) {
     case "input":
     case "textarea":
@@ -50,55 +70,6 @@ const GetComponent = (
     default:
       templatePlaceholder = placeholder;
   }
-
-  const optionRender: SelectProps["optionRender"] = (option) => {
-    const { data } = option;
-
-    return (
-      <div className="flex items-center justify-stretch gap-3 font-semibold">
-        {data?.Icon && <data.Icon color={data.color ?? "default"} />}
-        {data.label}
-      </div>
-    );
-  };
-
-  const tagRender: SelectProps["tagRender"] = (props) => {
-    const selected = select?.options?.find(
-      (item) => item.value === props.value,
-    );
-
-    return (
-      <Tag
-        {...props}
-        color={selected?.color ?? "default"}
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: 4,
-          fontWeight: 600,
-        }}
-      >
-        {selected?.Icon && <selected.Icon />}
-        {props.label}
-      </Tag>
-    );
-  };
-
-  const labelRender: SelectProps["labelRender"] = (props) => {
-    const selected = select?.options?.find(
-      (item) => item.value === props.value,
-    );
-
-    return (
-      <div className="flex items-center justify-stretch gap-3 font-semibold">
-        {selected?.Icon && (
-          <selected.Icon color={selected.color ?? "default"} />
-        )}
-        {selected?.label}
-      </div>
-    );
-  };
 
   switch (type) {
     case "input":
@@ -132,8 +103,6 @@ const GetComponent = (
           placeholder={templatePlaceholder}
           disabled={disabled}
           options={select?.options}
-          optionRender={optionRender}
-          labelRender={labelRender}
           allowClear
         />
       );
@@ -146,8 +115,6 @@ const GetComponent = (
           placeholder={templatePlaceholder}
           disabled={disabled}
           options={select?.options}
-          optionRender={optionRender}
-          tagRender={tagRender}
         />
       );
     case "upload":
@@ -180,13 +147,13 @@ const GetComponent = (
             }
           }}
           onRemove={async (file) => {
-            const path = (file as any).storagePath ?? file.response?.data?.storagePath;
+            const path =
+              (file as any).storagePath ?? file.response?.data?.storagePath;
             if (path) {
               try {
-                await fetch(
-                  `/api/upload?path=${encodeURIComponent(path)}`,
-                  { method: "DELETE" },
-                );
+                await fetch(`/api/upload?path=${encodeURIComponent(path)}`, {
+                  method: "DELETE",
+                });
               } catch (e) {
                 console.error("Error deleting image:", e);
               }
@@ -197,7 +164,7 @@ const GetComponent = (
             <img
               src={value}
               alt="Uploaded"
-              className="w-full h-full max-h-[200px] object-contain rounded-md"
+              className="w-full h-full max-h-50 object-contain rounded-md"
             />
           ) : (
             <>
@@ -224,13 +191,13 @@ const GetComponent = (
             return true;
           }}
           onRemove={async (file) => {
-            const path = (file as any).storagePath ?? file.response?.data?.storagePath;
+            const path =
+              (file as any).storagePath ?? file.response?.data?.storagePath;
             if (path) {
               try {
-                await fetch(
-                  `/api/upload?path=${encodeURIComponent(path)}`,
-                  { method: "DELETE" },
-                );
+                await fetch(`/api/upload?path=${encodeURIComponent(path)}`, {
+                  method: "DELETE",
+                });
               } catch (e) {
                 console.error("Error deleting image:", e);
               }
@@ -263,7 +230,7 @@ const GetComponent = (
   }
 };
 
-const getFieldDecorator = (props: FieldProps) => {
+const getFieldDecorator = (props: FieldProps, isDark?: boolean) => {
   const {
     name,
     label,
@@ -279,17 +246,18 @@ const getFieldDecorator = (props: FieldProps) => {
 
   const Icon = loadAntdIcon(icon as string);
   const renderIcon = icon ? <Icon style={{ marginRight: "4px" }} /> : null;
-  const component = GetComponent(
+  const component = GetComponent({
     type,
-    label,
+    name: label,
     value,
     placeholder,
     disabled,
-    renderIcon,
+    Icon: renderIcon,
     select,
     uploadHint,
-    props.formInstance,
-  );
+    formInstance: props.formInstance,
+    isDark,
+  });
 
   return {
     name,
@@ -308,10 +276,13 @@ const FormAdmin = ({
   customComponent,
 }: FormAdminProps) => {
   const { t } = useLocale();
+  const { mode, hydrated } = useThemeMode();
+  const isDark = hydrated && mode === "dark";
 
-  const renderContactList = (item: FormLayoutItem, formProps: FormProps) => {
+  const renderContactList = (item: FormLayoutItem, formProps: FormProps, isDark?: boolean) => {
     const contactOptions: Array<{ label: string; value: string }> =
-      (optionList?.[item.name] as Array<{ label: string; value: string }>) || [];
+      (optionList?.[item.name] as Array<{ label: string; value: string }>) ||
+      [];
     const form = formProps.form;
 
     return (
@@ -340,10 +311,7 @@ const FormAdmin = ({
                     key={key}
                     className="flex flex-col sm:flex-row gap-2 sm:items-center"
                   >
-                    <Space.Compact
-                      key={key}
-                      style={{ width: "100%", flex: 1 }}
-                    >
+                    <Space.Compact key={key} style={{ width: "100%", flex: 1 }}>
                       <Form.Item
                         {...restField}
                         name={[name, "type"]}
@@ -360,17 +328,17 @@ const FormAdmin = ({
                           flex: "none",
                         }}
                       >
-                        {GetComponent(
-                          "select",
-                          [name, "type"],
-                          formValue?.[item.name]?.[name]?.type,
-                          `Select contact`,
-                          item.disabled,
-                          undefined,
-                          {
+                        {GetComponent({
+                          type: "select",
+                          name: [name, "type"],
+                          value: formValue?.[item.name]?.[name]?.type,
+                          placeholder: `Select contact`,
+                          disabled: item.disabled,
+                          select: {
                             options: availableOptions,
                           },
-                        )}
+                          isDark,
+                        })}
                       </Form.Item>
                       <Form.Item
                         {...restField}
@@ -384,13 +352,14 @@ const FormAdmin = ({
                         className="mb-0"
                         style={{ marginBottom: 0, flex: 1 }}
                       >
-                        {GetComponent(
-                          "input",
-                          [name, "value"],
-                          formValue?.[item.name]?.[name]?.value,
-                          `Enter contact`,
-                          item.disabled,
-                        )}
+                        {GetComponent({
+                          type: "input",
+                          name: [name, "value"],
+                          value: formValue?.[item.name]?.[name]?.value,
+                          placeholder: `Enter contact`,
+                          disabled: item.disabled,
+                          isDark,
+                        })}
                       </Form.Item>
                     </Space.Compact>
 
@@ -427,170 +396,169 @@ const FormAdmin = ({
   };
 
   const renderForm = (layout: FormLayout[]) =>
-    layout.map((form: FormLayout) => {
-      const sectionTitle = form.titleKey ? t(form.titleKey) : form.title;
-      return (
-        <div key={sectionTitle?.toLowerCase() ?? form.key}>
-          <h2
-            hidden={!sectionTitle}
-            className="font-semibold text-xl py-1 m-0"
-          >
-            {sectionTitle}
-          </h2>
-          <hr
-            hidden={!sectionTitle}
-            className="py-1 border-neutral-500/50"
-          />
-          {form.items.map((item: FormLayoutItem) => {
-          if (item.type === "contact_list") {
-            return renderContactList(item, formProps as FormProps);
-          }
+    layout
+      .filter((form) => !form.hidden)
+      .map((form: FormLayout) => {
+        const sectionTitle = form.titleKey ? t(form.titleKey) : form.title;
+        return (
+          <div key={sectionTitle?.toLowerCase() ?? form.key}>
+            <h2
+              hidden={!sectionTitle}
+              className="font-semibold text-xl py-1 m-0"
+            >
+              {sectionTitle}
+            </h2>
+            <hr hidden={!sectionTitle} className="py-1 border-neutral-500/50" />
+            {form.items.map((item: FormLayoutItem) => {
+              if (item.type === "contact_list") {
+                return renderContactList(item, formProps as FormProps, isDark);
+              }
 
-          if (item.isList) {
-            const Icon = loadAntdIcon(item.icon as string);
-            return (
-              <Form.List key={item.name} name={item.name}>
-                {(fields, { add, remove }) => (
-                  <div className="flex flex-col gap-2">
-                    <label>{item.label ?? t(`form.${item.name}`)}</label>
-                    {fields.map(({ key, name, ...restField }) => (
-                      <div key={key} className="flex gap-2">
-                        <Form.Item
-                          {...restField}
-                          name={name}
-                          rules={[
-                            {
-                              required: item.required,
-                              message: t("validation.required", {
-                                field: item.label ?? t(`form.${item.name}`),
-                              }),
-                            },
-                          ]}
-                          className="!mb-0 flex-1"
-                        >
-                          {GetComponent(
-                            item.type,
-                            item.name,
-                            formValue?.[item.name]?.[name],
-                            undefined,
-                            item.disabled,
-                            item.icon ? (
-                              <Icon style={{ marginRight: "4px" }} />
-                            ) : undefined,
-                            {
-                              options: optionList?.[item.name],
-                            },
-                          )}
-                        </Form.Item>
+              if (item.isList) {
+                const Icon = loadAntdIcon(item.icon as string);
+                return (
+                  <Form.List key={item.name} name={item.name}>
+                    {(fields, { add, remove }) => (
+                      <div className="flex flex-col gap-2">
+                        <label>{item.label ?? t(`form.${item.name}`)}</label>
+                        {fields.map(({ key, name, ...restField }) => (
+                          <div key={key} className="flex gap-2">
+                            <Form.Item
+                              {...restField}
+                              name={name}
+                              rules={[
+                                {
+                                  required: item.required,
+                                  message: t("validation.required", {
+                                    field: item.label ?? t(`form.${item.name}`),
+                                  }),
+                                },
+                              ]}
+                              className="!mb-0 flex-1"
+                            >
+                              {GetComponent({
+                                type: item.type,
+                                name: item.name,
+                                value: formValue?.[item.name]?.[name],
+                                disabled: item.disabled,
+                                Icon: item.icon ? (
+                                  <Icon style={{ marginRight: "4px" }} />
+                                ) : undefined,
+                                select: {
+                                  options: optionList?.[item.name],
+                                },
+                                isDark,
+                              })}
+                            </Form.Item>
+                            <Button
+                              danger
+                              disabled={item.disabled}
+                              onClick={() => remove(name)}
+                              icon={<DeleteOutlined />}
+                            />
+                          </div>
+                        ))}
                         <Button
-                          danger
+                          type="dashed"
                           disabled={item.disabled}
-                          onClick={() => remove(name)}
-                          icon={<DeleteOutlined />}
-                        />
+                          onClick={() => add()}
+                          icon={<PlusOutlined />}
+                          block
+                          style={{ margin: "0 0 24px" }}
+                        >
+                          {t("common.addField", {
+                            field: item.label ?? t(`form.${item.name}`),
+                          })}
+                        </Button>
                       </div>
-                    ))}
-                    <Button
-                      type="dashed"
-                      disabled={item.disabled}
-                      onClick={() => add()}
-                      icon={<PlusOutlined />}
-                      block
-                      style={{ margin: "0 0 24px" }}
-                    >
-                      {t("common.addField", {
-                        field: item.label ?? t(`form.${item.name}`),
-                      })}
-                    </Button>
-                  </div>
-                )}
-              </Form.List>
-            );
-          }
+                    )}
+                  </Form.List>
+                );
+              }
 
-          if (item.type === "image_upload" || item.type === "upload") {
-            return (
-              <Form.Item
-                key={item.name}
-                name={item.name}
-                label={item.label ?? t(`form.${item.name}`)}
-                valuePropName="fileList"
-                getValueFromEvent={(e) => {
-                  if (Array.isArray(e)) {
-                    return e;
-                  }
-                  return e?.fileList;
-                }}
-              >
-                {GetComponent(
-                  item.type,
-                  item.name,
-                  formValue?.[item.name],
-                  item.placeholder,
-                  item.disabled,
-                  undefined,
-                  {
-                    options: optionList?.[item.name],
-                  },
-                  {
-                    hint: t("upload.hint"),
-                    subHint: t("upload.subHint"),
-                  },
-                )}
-              </Form.Item>
-            );
-          }
-
-          // Handle custom component
-          if (customComponent && customComponent[item.name]) {
-            return (
-              <Form.Item
-                key={item.name}
-                name={item.name}
-                label={item.label ?? t(`form.${item.name}`)}
-              >
-                {customComponent[item.name]}
-              </Form.Item>
-            );
-          }
-
-          return (
-            <Form.Item
-              key={item.name}
-              {...getFieldDecorator({
-                name: item.name,
-                label: item.label ?? t(`form.${item.name}`),
-                value: formValue?.[item.name],
-                type: item.type,
-                placeholder: item.placeholder,
-                icon: item.icon,
-                disabled: formProps?.disabled || item.disabled,
-                rules: item.required
-                  ? [
-                      ...(item.rules ?? []),
-                      {
-                        required: true,
-                        message: t("validation.required", {
-                          field: item.label ?? t(`form.${item.name}`),
-                        }),
+              if (item.type === "image_upload" || item.type === "upload") {
+                return (
+                  <Form.Item
+                    key={item.name}
+                    name={item.name}
+                    label={item.label ?? t(`form.${item.name}`)}
+                    valuePropName="fileList"
+                    getValueFromEvent={(e) => {
+                      if (Array.isArray(e)) {
+                        return e;
+                      }
+                      return e?.fileList;
+                    }}
+                  >
+                    {GetComponent({
+                      type: item.type,
+                      name: item.name,
+                      value: formValue?.[item.name],
+                      placeholder: item.placeholder,
+                      disabled: item.disabled,
+                      select: {
+                        options: optionList?.[item.name],
                       },
-                    ]
-                  : item.rules,
-                select: {
-                  options: optionList?.[item.name],
-                },
-                uploadHint: {
-                  hint: t("upload.hint"),
-                  subHint: t("upload.subHint"),
-                },
-                formInstance: formProps?.form,
-              })}
-            />
-          );
-        })}
-        </div>
-      );
-    });
+                      uploadHint: {
+                        hint: t("upload.hint"),
+                        subHint: t("upload.subHint"),
+                      },
+                      isDark,
+                    })}
+                  </Form.Item>
+                );
+              }
+
+              // Handle custom component
+              if (customComponent && customComponent[item.name]) {
+                return (
+                  <Form.Item
+                    key={item.name}
+                    name={item.name}
+                    label={item.label ?? t(`form.${item.name}`)}
+                  >
+                    {customComponent[item.name]}
+                  </Form.Item>
+                );
+              }
+
+              return (
+                <Form.Item
+                  key={item.name}
+                  {...getFieldDecorator({
+                    name: item.name,
+                    label: item.label ?? t(`form.${item.name}`),
+                    value: formValue?.[item.name],
+                    type: item.type,
+                    placeholder: item.placeholder,
+                    icon: item.icon,
+                    disabled: formProps?.disabled || item.disabled,
+                    rules: item.required
+                      ? [
+                          ...(item.rules ?? []),
+                          {
+                            required: true,
+                            message: t("validation.required", {
+                              field: item.label ?? t(`form.${item.name}`),
+                            }),
+                          },
+                        ]
+                      : item.rules,
+                    select: {
+                      options: optionList?.[item.name],
+                    },
+                    uploadHint: {
+                      hint: t("upload.hint"),
+                      subHint: t("upload.subHint"),
+                    },
+                    formInstance: formProps?.form,
+                  }, isDark)}
+                />
+              );
+            })}
+          </div>
+        );
+      });
 
   return (
     <Form

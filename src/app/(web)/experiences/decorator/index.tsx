@@ -8,7 +8,6 @@ import dayjs from "dayjs";
 import LoaderPage from "@/components/admin/loader";
 import { getImagesArray } from "@/utils/helpers/image";
 import { useLocale } from "@/components/locale/LocaleProvider";
-import { skillsOptions } from "@/utils/helpers/skills";
 import { FormLayout } from "@/interfaces/form";
 
 export type ExperienceStatus = "ACTIVE" | "NONACTIVE";
@@ -18,7 +17,6 @@ interface ExperienceItem {
   job_title: string;
   company_name: string;
   description?: string | null;
-  skills: string[];
   images: string[];
   start_date: string;
   end_date?: string | null;
@@ -76,7 +74,6 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       job_title: values.job_title,
       company_name: values.company_name,
       description: values.description,
-      skills: values.skills || [],
       images: imagesArray,
       start_date: start?.toISOString(),
       end_date: values.is_present ? null : end?.toISOString(),
@@ -196,10 +193,6 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     }
   };
 
-  const options = {
-    skills: skillsOptions,
-  };
-
   const formatPeriod = (item: ExperienceItem) => {
     const start = dayjs(item.start_date).format("MMM YYYY");
     const end = item.is_present
@@ -222,7 +215,6 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       job_title: item.job_title,
       company_name: item.company_name,
       description: item.description,
-      skills: item.skills,
       images: item.images?.map((url) => ({ url, thumbUrl: url, status: "done" })),
       period: item.start_date
         ? [
@@ -313,7 +305,7 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
           icon={<PlusIcon />}
           variant="solid"
           color="geekblue"
-          iconPosition="end"
+          iconPlacement="end"
           size="large"
           onClick={handleAdd}
         >
@@ -406,12 +398,6 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                       dangerouslySetInnerHTML={{ __html: item.description }}
                     />
                   )}
-
-                  <div className="flex flex-wrap gap-y-1">
-                    {item.skills?.map((skill) => (
-                      <Tag key={skill}>{skill}</Tag>
-                    ))}
-                  </div>
                 </div>
               </Card>
             ))}
@@ -439,7 +425,7 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
           },
         }}
       >
-        <FormAdmin formProps={{ form }} layout={formLayout} optionList={options} />
+        <FormAdmin formProps={{ form }} layout={formLayout} />
       </Modal>
 
       <Modal
@@ -462,7 +448,7 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                 icon={isEditMode ? <SaveIcon /> : <EditIcon />}
                 variant="solid"
                 color={isEditMode ? "volcano" : "geekblue"}
-                iconPosition="end"
+                iconPlacement="end"
                 size="small"
                 onClick={
                   isEditMode
@@ -505,7 +491,6 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         <FormAdmin
           formProps={{ form: detailForm, disabled: !isEditMode }}
           layout={formLayout}
-          optionList={options}
           formValue={dataDetail}
         />
       </Modal>

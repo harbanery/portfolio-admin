@@ -61,8 +61,7 @@ const id: TranslationDict = {
   "notif.fetchFailed": "Gagal memuat data",
   "notif.confirmDelete": "Yakin ingin menghapus {entity} ini?",
   "notif.confirmSave": "Yakin ingin menyimpan perubahan?",
-  "notif.confirmToggle":
-    "Yakin ingin {action} {entity} ini?",
+  "notif.confirmToggle": "Yakin ingin {action} {entity} ini?",
 
   // Menu
   "menu.dashboard": "Dashboard",
@@ -104,7 +103,7 @@ const id: TranslationDict = {
   "projects.title": "Project",
   "projects.description": "Kelola project portfolio Anda",
   "projects.add": "Tambah Project",
-  "projects.empty": "Belum ada project. Klik \"Tambah Project\" untuk membuat.",
+  "projects.empty": 'Belum ada project. Klik "Tambah Project" untuk membuat.',
   "projects.detail": "Detail Project",
   "projects.dragHint": "Tarik ikon untuk mengubah urutan",
 
@@ -112,21 +111,24 @@ const id: TranslationDict = {
   "experiences.title": "Experience",
   "experiences.description": "Kelola pengalaman kerja Anda",
   "experiences.add": "Tambah Experience",
-  "experiences.empty": "Belum ada experience. Klik \"Tambah Experience\" untuk membuat.",
+  "experiences.empty":
+    'Belum ada experience. Klik "Tambah Experience" untuk membuat.',
   "experiences.detail": "Detail Experience",
 
   // Certifications
   "certifications.title": "Certification",
   "certifications.description": "Kelola sertifikasi Anda",
   "certifications.add": "Tambah Certification",
-  "certifications.empty": "Belum ada sertifikasi. Klik \"Tambah Certification\" untuk membuat.",
+  "certifications.empty":
+    'Belum ada sertifikasi. Klik "Tambah Certification" untuk membuat.',
   "certifications.detail": "Detail Certification",
 
   // Educations
   "educations.title": "Education",
   "educations.description": "Kelola riwayat pendidikan Anda",
   "educations.add": "Tambah Education",
-  "educations.empty": "Belum ada pendidikan. Klik \"Tambah Education\" untuk membuat.",
+  "educations.empty":
+    'Belum ada pendidikan. Klik "Tambah Education" untuk membuat.',
   "educations.detail": "Detail Education",
 
   // Personal
@@ -142,7 +144,7 @@ const id: TranslationDict = {
   "cv.title": "CV",
   "cv.description": "Kelola file CV Anda",
   "cv.add": "Tambah CV",
-  "cv.empty": "Belum ada CV. Klik \"Tambah CV\" untuk membuat.",
+  "cv.empty": 'Belum ada CV. Klik "Tambah CV" untuk membuat.',
   "cv.detail": "Detail CV",
 
   // Table columns
@@ -195,6 +197,7 @@ const id: TranslationDict = {
   "form.degree": "Gelar",
   "form.field": "Bidang",
   "form.grade": "Nilai",
+  "form.courses": "Kursus",
   "form.name": "Nama",
   "form.about": "Tentang",
   "form.contacts": "Kontak",
@@ -319,7 +322,7 @@ const en: TranslationDict = {
   "projects.title": "Project",
   "projects.description": "Manage your projects",
   "projects.add": "Add Project",
-  "projects.empty": "No projects yet. Click \"Add Project\" to create one.",
+  "projects.empty": 'No projects yet. Click "Add Project" to create one.',
   "projects.detail": "Project Detail",
   "projects.dragHint": "Drag the icon to reorder",
 
@@ -328,7 +331,7 @@ const en: TranslationDict = {
   "experiences.description": "Manage your work experiences",
   "experiences.add": "Add Experience",
   "experiences.empty":
-    "No experiences yet. Click \"Add Experience\" to create one.",
+    'No experiences yet. Click "Add Experience" to create one.',
   "experiences.detail": "Experience Detail",
 
   // Certifications
@@ -336,15 +339,14 @@ const en: TranslationDict = {
   "certifications.description": "Manage your certifications",
   "certifications.add": "Add Certification",
   "certifications.empty":
-    "No certifications yet. Click \"Add Certification\" to create one.",
+    'No certifications yet. Click "Add Certification" to create one.',
   "certifications.detail": "Certification Detail",
 
   // Educations
   "educations.title": "Education",
   "educations.description": "Manage your education history",
   "educations.add": "Add Education",
-  "educations.empty":
-    "No educations yet. Click \"Add Education\" to create one.",
+  "educations.empty": 'No educations yet. Click "Add Education" to create one.',
   "educations.detail": "Education Detail",
 
   // Personal
@@ -360,7 +362,7 @@ const en: TranslationDict = {
   "cv.title": "CV",
   "cv.description": "Manage your CV files",
   "cv.add": "Add CV",
-  "cv.empty": "No CV yet. Click \"Add CV\" to create one.",
+  "cv.empty": 'No CV yet. Click "Add CV" to create one.',
   "cv.detail": "CV Detail",
 
   // Table columns
@@ -413,6 +415,7 @@ const en: TranslationDict = {
   "form.degree": "Degree",
   "form.field": "Field",
   "form.grade": "Grade",
+  "form.courses": "Courses",
   "form.name": "Name",
   "form.about": "About",
   "form.contacts": "Contacts",

@@ -38,8 +38,6 @@ interface ProjectItem {
   title: string;
   subtitle?: string;
   project_type?: string;
-  client_name?: string;
-  company_name?: string;
   role: string;
   skills: string[];
   image: string;
@@ -193,10 +191,6 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       title: values.title,
       subtitle: values.subtitle,
       projectType: values.project_type,
-      clientName:
-        values.project_type === "client" ? values.client_name : undefined,
-      companyName:
-        values.project_type === "internal" ? values.company_name : undefined,
       role: values.role,
       image: imageString,
       images: imagesArray,
@@ -343,8 +337,6 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       title: item.title,
       subtitle: item.subtitle,
       project_type: item.project_type,
-      client_name: item.client_name,
-      company_name: item.company_name,
       role: item.role,
       image: item.image
         ? [{ url: item.image, thumbUrl: item.image, status: "done" }]
@@ -455,7 +447,7 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
           icon={<PlusIcon />}
           variant="solid"
           color="geekblue"
-          iconPosition="end"
+          iconPlacement="end"
           size="large"
           onClick={handleAddProject}
         >
@@ -674,7 +666,7 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                 icon={isEditMode ? <SaveIcon /> : <EditIcon />}
                 variant="solid"
                 color={isEditMode ? "volcano" : "geekblue"}
-                iconPosition="end"
+                iconPlacement="end"
                 size="small"
                 onClick={
                   isEditMode

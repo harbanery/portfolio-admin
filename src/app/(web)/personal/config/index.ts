@@ -19,6 +19,7 @@ export const formLayout: FormLayout[] = [
   {
     key: "images",
     titleKey: "personal.section.images",
+    hidden: true,
     items: [
       {
         name: "images",

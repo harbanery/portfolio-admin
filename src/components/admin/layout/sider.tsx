@@ -65,7 +65,7 @@ const SiderLayout: React.FC<SiderLayoutProps> = ({
         placement="left"
         open={mobileOpen}
         onClose={onMobileClose}
-        width={220}
+        size="default"
         styles={{ body: { padding: 0 } }}
       >
         <Menu

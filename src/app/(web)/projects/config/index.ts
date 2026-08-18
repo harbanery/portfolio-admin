@@ -20,16 +20,6 @@ export const formLayout: FormLayout[] = [
         required: true,
       },
       {
-        name: "client_name",
-        type: "input",
-        required: false,
-      },
-      {
-        name: "company_name",
-        type: "input",
-        required: false,
-      },
-      {
         name: "role",
         type: "select",
         required: true,
