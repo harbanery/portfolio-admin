@@ -2,7 +2,7 @@
 
 import { Button, Drawer, Grid, Layout, Menu, type MenuProps } from "antd";
 import { useEffect, useState } from "react";
-import { menuAdminConfig } from "@/utils/helpers/menu";
+import { menuAdminConfig } from "@/helpers/menu";
 import { loadAntdIcon } from "@/components/custom/icon";
 import { useLocale } from "@/components/locale/LocaleProvider";
 import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";

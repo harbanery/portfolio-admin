@@ -15,10 +15,10 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
-import LoaderPage from "@/components/admin/loader";
-import { getImageString } from "@/utils/helpers/image";
+import { modalBodyProps } from "@/helpers/modal";
+import { getImageString } from "@/helpers/image";
 import { useLocale } from "@/components/locale/LocaleProvider";
-import { skillsOptions } from "@/utils/helpers/skills";
+import { skillsOptions } from "@/helpers/skills";
 import { FormLayout } from "@/models/form";
 
 export type CertificationStatus = "ACTIVE" | "NONACTIVE";
@@ -70,7 +70,7 @@ const CertificationDecorator = ({
       console.error("Error fetching certifications:", error);
       notification.error({
         key: "fetch-error",
-        message: t("notif.error"),
+        title: t("notif.error"),
         description: t("notif.fetchFailed"),
         placement: "bottomRight",
       });
@@ -134,7 +134,7 @@ const CertificationDecorator = ({
 
       notification.success({
         key: "save-success",
-        message: t("notif.success"),
+        title: t("notif.success"),
         description: t("notif.saveSuccess", {
           entity: t("certifications.title"),
         }),
@@ -143,11 +143,10 @@ const CertificationDecorator = ({
       setIsModalOpen(false);
       form.resetFields();
       fetchCertifications();
-      return Promise.resolve();
     } catch (error: any) {
       notification.error({
         key: "save-error",
-        message: error?.errorFields
+        title: error?.errorFields
           ? t("notif.validationError")
           : t("notif.error"),
         ...(error?.errorFields
@@ -159,7 +158,6 @@ const CertificationDecorator = ({
             }),
         placement: "bottomRight",
       });
-      return Promise.reject();
     } finally {
       setLoading(false);
     }
@@ -175,7 +173,7 @@ const CertificationDecorator = ({
       fetchCertifications();
       notification.success({
         key: "delete-success",
-        message: t("notif.success"),
+        title: t("notif.success"),
         description: t("notif.deleteSuccess", {
           entity: t("certifications.title"),
         }),
@@ -184,7 +182,7 @@ const CertificationDecorator = ({
     } catch (error: any) {
       notification.error({
         key: "delete-error",
-        message: t("notif.error"),
+        title: t("notif.error"),
         description:
           error?.message ||
           t("notif.deleteFailed", { entity: t("certifications.title") }),
@@ -210,7 +208,7 @@ const CertificationDecorator = ({
       fetchCertifications();
       notification.success({
         key: "toggle-status-success",
-        message: t("notif.success"),
+        title: t("notif.success"),
         description: t("notif.toggleSuccess", {
           entity: t("certifications.title"),
           status:
@@ -221,7 +219,7 @@ const CertificationDecorator = ({
     } catch (error: any) {
       notification.error({
         key: "toggle-status-error",
-        message: t("notif.error"),
+        title: t("notif.error"),
         description:
           error?.message ||
           t("notif.toggleFailed", { entity: t("certifications.title") }),
@@ -397,13 +395,7 @@ const CertificationDecorator = ({
         cancelText={t("common.cancel")}
         confirmLoading={loading}
         width={700}
-        styles={{
-          body: {
-            paddingBlock: "10px",
-            maxHeight: "70vh",
-            overflowY: "auto",
-          },
-        }}
+        {...modalBodyProps()}
       >
         <FormAdmin
           formProps={{ form }}

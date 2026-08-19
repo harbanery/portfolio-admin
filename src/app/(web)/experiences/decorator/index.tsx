@@ -6,7 +6,8 @@ import { App, Button, Form, Modal, Card, Tag, Empty, Typography } from "antd";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import LoaderPage from "@/components/admin/loader";
-import { getImagesArray } from "@/utils/helpers/image";
+import { modalBodyProps } from "@/helpers/modal";
+import { getImagesArray } from "@/helpers/image";
 import { useLocale } from "@/components/locale/LocaleProvider";
 import { FormLayout } from "@/models/form";
 
@@ -58,7 +59,7 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       console.error("Error fetching experiences:", error);
       notification.error({
         key: "fetch-error",
-        message: t("notif.error"),
+        title: t("notif.error"),
         description: t("notif.fetchFailed"),
         placement: "bottomRight",
       });
@@ -101,18 +102,17 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
 
       notification.success({
         key: "save-success",
-        message: t("notif.success"),
+        title: t("notif.success"),
         description: t("notif.saveSuccess", { entity: t("experiences.title") }),
         placement: "bottomRight",
       });
       setIsModalOpen(false);
       form.resetFields();
       fetchExperiences();
-      return Promise.resolve();
     } catch (error: any) {
       notification.error({
         key: "save-error",
-        message: error?.errorFields ? t("notif.validationError") : t("notif.error"),
+        title: error?.errorFields ? t("notif.validationError") : t("notif.error"),
         ...(error?.errorFields
           ? {}
           : {
@@ -122,7 +122,6 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
             }),
         placement: "bottomRight",
       });
-      return Promise.reject();
     } finally {
       setLoading(false);
     }
@@ -138,7 +137,7 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       fetchExperiences();
       notification.success({
         key: "delete-success",
-        message: t("notif.success"),
+        title: t("notif.success"),
         description: t("notif.deleteSuccess", {
           entity: t("experiences.title"),
         }),
@@ -147,7 +146,7 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     } catch (error: any) {
       notification.error({
         key: "delete-error",
-        message: t("notif.error"),
+        title: t("notif.error"),
         description:
           error?.message ||
           t("notif.deleteFailed", { entity: t("experiences.title") }),
@@ -173,7 +172,7 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       fetchExperiences();
       notification.success({
         key: "toggle-status-success",
-        message: t("notif.success"),
+        title: t("notif.success"),
         description: t("notif.toggleSuccess", {
           entity: t("experiences.title"),
           status:
@@ -184,7 +183,7 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     } catch (error: any) {
       notification.error({
         key: "toggle-status-error",
-        message: t("notif.error"),
+        title: t("notif.error"),
         description:
           error?.message ||
           t("notif.toggleFailed", { entity: t("experiences.title") }),
@@ -255,17 +254,16 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
 
       notification.success({
         key: "edit-success",
-        message: t("notif.success"),
+        title: t("notif.success"),
         description: t("notif.saveSuccess", { entity: t("experiences.title") }),
         placement: "bottomRight",
       });
       setIsEditMode(false);
       fetchExperiences();
-      return Promise.resolve();
     } catch (error: any) {
       notification.error({
         key: "edit-error",
-        message: error?.errorFields ? t("notif.validationError") : t("notif.error"),
+        title: error?.errorFields ? t("notif.validationError") : t("notif.error"),
         ...(error?.errorFields
           ? {}
           : {
@@ -275,7 +273,6 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
             }),
         placement: "bottomRight",
       });
-      return Promise.reject();
     } finally {
       setLoading(false);
     }
@@ -417,13 +414,7 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         cancelText={t("common.cancel")}
         confirmLoading={loading}
         width={700}
-        styles={{
-          body: {
-            paddingBlock: "10px",
-            maxHeight: "70vh",
-            overflowY: "auto",
-          },
-        }}
+        {...modalBodyProps()}
       >
         <FormAdmin formProps={{ form }} layout={formLayout} />
       </Modal>
@@ -480,13 +471,7 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         onCancel={handleCloseDetail}
         footer={null}
         width={700}
-        styles={{
-          body: {
-            paddingBlock: "10px",
-            maxHeight: "75vh",
-            overflowY: "auto",
-          },
-        }}
+        {...modalBodyProps()}
       >
         <FormAdmin
           formProps={{ form: detailForm, disabled: !isEditMode }}

@@ -16,28 +16,28 @@ import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import LoaderPage from "@/components/admin/loader";
 import { useLocale } from "@/components/locale/LocaleProvider";
-import { skillsOptions } from "@/utils/helpers/skills";
+import { modalBodyProps } from "@/helpers/modal";
 import { FormLayout } from "@/models/form";
 
 export type EducationStatus = "ACTIVE" | "NONACTIVE";
+export type EducationType = "FORMAL" | "NONFORMAL";
 
 interface EducationItem {
   id: number;
+  education_type: EducationType;
   school: string;
-  degree: string;
+  degree?: string | null;
   field: string;
   start_date: string;
   end_date?: string | null;
   grade?: string | null;
   description?: string | null;
-  courses: string[];
   status: EducationStatus;
 }
 
 const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   const { t } = useLocale();
   const PlusIcon = loadAntdIcon("PlusOutlined");
-  const EditIcon = loadAntdIcon("EditOutlined");
   const DeleteIcon = loadAntdIcon("DeleteOutlined");
   const CheckIcon = loadAntdIcon("CheckOutlined");
   const StopIcon = loadAntdIcon("StopOutlined");
@@ -51,6 +51,16 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   const [items, setItems] = useState<EducationItem[]>([]);
   const [editingItem, setEditingItem] = useState<EducationItem | null>(null);
 
+  const educationTypeOptions = [
+    { label: t("option.education.formal"), value: "FORMAL" },
+    { label: t("option.education.nonformal"), value: "NONFORMAL" },
+  ];
+
+  const educationTypeLabel = (type: EducationType) =>
+    type === "NONFORMAL"
+      ? t("option.education.nonformal")
+      : t("option.education.formal");
+
   const fetchEducations = async () => {
     setFetching(true);
     try {
@@ -63,7 +73,7 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       console.error("Error fetching educations:", error);
       notification.error({
         key: "fetch-error",
-        message: t("notif.error"),
+        title: t("notif.error"),
         description: t("notif.fetchFailed"),
         placement: "bottomRight",
       });
@@ -74,15 +84,16 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
 
   const toPayload = (values: Record<string, any>) => {
     const [start, end] = values.period || [];
+    const isNonFormal = values.education_type === "NONFORMAL";
     return {
+      educationType: values.education_type ?? "FORMAL",
       school: values.school,
-      degree: values.degree,
+      degree: isNonFormal ? null : values.degree || null,
       field: values.field,
       startDate: start?.toISOString(),
       endDate: end?.toISOString() ?? null,
       grade: values.grade,
       description: values.description,
-      courses: values.courses || [],
     };
   };
 
@@ -95,12 +106,12 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   const handleEdit = (item: EducationItem) => {
     setEditingItem(item);
     form.setFieldsValue({
+      education_type: item.education_type,
       school: item.school,
       degree: item.degree,
       field: item.field,
       grade: item.grade,
       description: item.description,
-      courses: item.courses,
       period: [
         item.start_date ? dayjs(item.start_date) : undefined,
         item.end_date ? dayjs(item.end_date) : undefined,
@@ -127,18 +138,17 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
 
       notification.success({
         key: "save-success",
-        message: t("notif.success"),
+        title: t("notif.success"),
         description: t("notif.saveSuccess", { entity: t("educations.title") }),
         placement: "bottomRight",
       });
       setIsModalOpen(false);
       form.resetFields();
       fetchEducations();
-      return Promise.resolve();
     } catch (error: any) {
       notification.error({
         key: "save-error",
-        message: error?.errorFields
+        title: error?.errorFields
           ? t("notif.validationError")
           : t("notif.error"),
         ...(error?.errorFields
@@ -150,7 +160,6 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
             }),
         placement: "bottomRight",
       });
-      return Promise.reject();
     } finally {
       setLoading(false);
     }
@@ -166,14 +175,14 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       fetchEducations();
       notification.success({
         key: "delete-success",
-        message: t("notif.success"),
+        title: t("notif.success"),
         description: t("notif.deleteSuccess", { entity: t("educations.title") }),
         placement: "bottomRight",
       });
     } catch (error: any) {
       notification.error({
         key: "delete-error",
-        message: t("notif.error"),
+        title: t("notif.error"),
         description:
           error?.message ||
           t("notif.deleteFailed", { entity: t("educations.title") }),
@@ -199,7 +208,7 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       fetchEducations();
       notification.success({
         key: "toggle-status-success",
-        message: t("notif.success"),
+        title: t("notif.success"),
         description: t("notif.toggleSuccess", {
           entity: t("educations.title"),
           status:
@@ -210,7 +219,7 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     } catch (error: any) {
       notification.error({
         key: "toggle-status-error",
-        message: t("notif.error"),
+        title: t("notif.error"),
         description:
           error?.message ||
           t("notif.toggleFailed", { entity: t("educations.title") }),
@@ -322,14 +331,27 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                         {item.school}
                       </h3>
                       <p className="text-sm text-gray-500 m-0">
-                        {item.degree} - {item.field}
+                        {item.degree
+                          ? `${item.degree} - ${item.field}`
+                          : item.field}
                       </p>
                     </div>
-                    <Tag color={item.status === "ACTIVE" ? "green" : "red"}>
-                      {item.status === "ACTIVE"
-                        ? t("common.active")
-                        : t("common.inactive")}
-                    </Tag>
+                    <div className="flex flex-col items-end gap-1">
+                      <Tag
+                        color={
+                          item.education_type === "FORMAL"
+                            ? "geekblue"
+                            : "purple"
+                        }
+                      >
+                        {educationTypeLabel(item.education_type)}
+                      </Tag>
+                      <Tag color={item.status === "ACTIVE" ? "green" : "red"}>
+                        {item.status === "ACTIVE"
+                          ? t("common.active")
+                          : t("common.inactive")}
+                      </Tag>
+                    </div>
                   </div>
 
                   <Typography.Text type="secondary">
@@ -347,14 +369,6 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                       className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 text-justify m-0"
                       dangerouslySetInnerHTML={{ __html: item.description }}
                     />
-                  )}
-
-                  {item.courses && item.courses.length > 0 && (
-                    <div className="flex flex-wrap gap-y-1">
-                      {item.courses?.map((course) => (
-                        <Tag key={course}>{course}</Tag>
-                      ))}
-                    </div>
                   )}
                 </div>
               </Card>
@@ -378,15 +392,16 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         cancelText={t("common.cancel")}
         confirmLoading={loading}
         width={700}
-        styles={{
-          body: {
-            paddingBlock: "10px",
-            maxHeight: "70vh",
-            overflowY: "auto",
-          },
-        }}
+        {...modalBodyProps()}
       >
-        <FormAdmin formProps={{ form }} layout={formLayout} optionList={{ courses: skillsOptions }} />
+        <FormAdmin
+          formProps={{
+            form,
+            initialValues: { education_type: "FORMAL" },
+          }}
+          layout={formLayout}
+          optionList={{ education_type: educationTypeOptions }}
+        />
       </Modal>
     </section>
   );

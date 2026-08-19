@@ -16,7 +16,6 @@ import {
 import DatePicker from "antd/es/date-picker";
 import { InboxOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useLocale } from "@/components/locale/LocaleProvider";
-import { useThemeMode } from "@/components/theme/ThemeProvider";
 import {
   FormAdminProps,
   FormLayout,
@@ -224,12 +223,9 @@ const FormAdmin = ({
   layout,
   optionList,
   formProps,
-  formValue,
   customComponent,
 }: FormAdminProps) => {
   const { t } = useLocale();
-  const { mode, hydrated } = useThemeMode();
-  const isDark = hydrated && mode === "dark";
   const [iconsReady, setIconsReady] = useState(false);
 
   const form = Form.useFormInstance();
@@ -256,7 +252,7 @@ const FormAdmin = ({
   }, [iconsReady]);
 
   const renderContactList = useCallback(
-    (item: FormLayoutItem, fp: FormProps, dark: boolean) => {
+    (item: FormLayoutItem, fp: FormProps) => {
       const contactOptions: Array<{ label: string; value: string }> =
         (optionList?.[item.name] as Array<{ label: string; value: string }>) ?? [];
       const f = fp.form;
@@ -345,6 +341,44 @@ const FormAdmin = ({
     [optionList, t],
   );
 
+  /** Render item form standar (dipakai langsung atau dalam wrapper kondisional). */
+  const renderStandardField = useCallback(
+    (item: FormLayoutItem) => (
+      <Form.Item
+        name={item.name}
+        label={item.label ?? t(`form.${item.name}`)}
+        rules={
+          item.required
+            ? [
+                ...(item.rules ?? []),
+                {
+                  required: true,
+                  message: t("validation.required", {
+                    field: item.label ?? t(`form.${item.name}`),
+                  }),
+                },
+              ]
+            : item.rules
+        }
+      >
+        {renderField({
+          type: item.type,
+          name: item.name,
+          placeholder: item.placeholder,
+          icon: item.icon,
+          disabled: (formProps as FormProps)?.disabled || item.disabled,
+          select: { options: optionList?.[item.name] },
+          uploadHint: {
+            hint: t("upload.hint"),
+            subHint: t("upload.subHint"),
+          },
+          formInstance: (formProps as FormProps)?.form,
+        })}
+      </Form.Item>
+    ),
+    [t, optionList, formProps],
+  );
+
   const renderForm = (formLayout: FormLayout[]) =>
     formLayout
       .filter((section) => !section.hidden)
@@ -359,7 +393,7 @@ const FormAdmin = ({
             {section.items.map((item: FormLayoutItem) => {
               /* ---- contact list ---- */
               if (item.type === "contact_list") {
-                return renderContactList(item, formProps as FormProps, isDark);
+                return renderContactList(item, formProps as FormProps);
               }
 
               /* ---- repeatable list ---- */
@@ -459,40 +493,30 @@ const FormAdmin = ({
                 );
               }
 
+              /* ---- conditional field (hiddenWhen) ---- */
+              if (item.hiddenWhen) {
+                const cond = item.hiddenWhen;
+                return (
+                  <Form.Item
+                    key={item.name}
+                    noStyle
+                    shouldUpdate={(prev, cur) => prev[cond.field] !== cur[cond.field]}
+                  >
+                    {({ getFieldValue }) => {
+                      const val = getFieldValue(cond.field);
+                      const hidden =
+                        cond.equals !== undefined
+                          ? val === cond.equals
+                          : val !== cond.notEquals;
+                      return hidden ? null : renderStandardField(item);
+                    }}
+                  </Form.Item>
+                );
+              }
+
               /* ---- standard field ---- */
               return (
-                <Form.Item
-                  key={item.name}
-                  name={item.name}
-                  label={item.label ?? t(`form.${item.name}`)}
-                  rules={
-                    item.required
-                      ? [
-                          ...(item.rules ?? []),
-                          {
-                            required: true,
-                            message: t("validation.required", {
-                              field: item.label ?? t(`form.${item.name}`),
-                            }),
-                          },
-                        ]
-                      : item.rules
-                  }
-                >
-                  {renderField({
-                    type: item.type,
-                    name: item.name,
-                    placeholder: item.placeholder,
-                    icon: item.icon,
-                    disabled: (formProps as FormProps)?.disabled || item.disabled,
-                    select: { options: optionList?.[item.name] },
-                    uploadHint: {
-                      hint: t("upload.hint"),
-                      subHint: t("upload.subHint"),
-                    },
-                    formInstance: (formProps as FormProps)?.form,
-                  })}
-                </Form.Item>
+                <div key={item.name}>{renderStandardField(item)}</div>
               );
             })}
           </div>
@@ -505,6 +529,7 @@ const FormAdmin = ({
       form={formProps?.form ?? form}
       disabled={(formProps as FormProps)?.disabled}
       layout={(formProps as FormProps)?.layout ?? "vertical"}
+      initialValues={(formProps as FormProps)?.initialValues}
     >
       {renderForm(layout)}
     </Form>

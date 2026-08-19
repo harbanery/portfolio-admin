@@ -32,6 +32,16 @@ export type FormLayoutItem = {
   multiple?: boolean;
   accept?: string;
   dependencies?: string[];
+  /**
+   * Sembunyikan field secara kondisional.
+   * - `equals`: field disembunyikan ketika nilai `field` sama dengan `equals`.
+   * - `notEquals`: field disembunyikan ketika nilai `field` tidak sama dengan `notEquals`.
+   */
+  hiddenWhen?: {
+    field: string;
+    equals?: string;
+    notEquals?: string;
+  };
 };
 
 export interface FieldProps {

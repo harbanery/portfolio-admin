@@ -172,19 +172,24 @@ model Certification {
   updatedAt     DateTime             @updatedAt
 }
 
+enum EducationType {
+  FORMAL
+  NONFORMAL
+}
+
 model Education {
-  id          Int             @id @default(autoincrement())
-  school      String
-  degree      String
-  field       String
-  start_date  DateTime
-  end_date    DateTime?
-  grade       String?
-  description String?
-  courses     String[]
-  status      EducationStatus  @default(ACTIVE)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id             Int             @id @default(autoincrement())
+  education_type EducationType   @default(FORMAL)
+  school         String
+  degree         String?
+  field          String
+  start_date     DateTime
+  end_date       DateTime?
+  grade          String?
+  description    String?
+  status         EducationStatus  @default(ACTIVE)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 }
 
 model Cv {

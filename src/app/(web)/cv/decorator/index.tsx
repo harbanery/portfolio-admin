@@ -16,6 +16,7 @@ import {
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import LoaderPage from "@/components/admin/loader";
+import { modalBodyProps } from "@/helpers/modal";
 import { useLocale } from "@/components/locale/LocaleProvider";
 import { FormLayout } from "@/models/form";
 
@@ -34,7 +35,6 @@ interface CvItem {
 const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   const { t } = useLocale();
   const PlusIcon = loadAntdIcon("PlusOutlined");
-  const EditIcon = loadAntdIcon("EditOutlined");
   const DeleteIcon = loadAntdIcon("DeleteOutlined");
   const LinkIcon = loadAntdIcon("LinkOutlined");
   const CheckIcon = loadAntdIcon("CheckOutlined");
@@ -62,7 +62,7 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       console.error("Error fetching cvs:", error);
       notification.error({
         key: "fetch-error",
-        message: t("notif.error"),
+        title: t("notif.error"),
         description: t("notif.fetchFailed"),
         placement: "bottomRight",
       });
@@ -113,18 +113,17 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
 
       notification.success({
         key: "save-success",
-        message: t("notif.success"),
+        title: t("notif.success"),
         description: t("notif.saveSuccess", { entity: t("cv.title") }),
         placement: "bottomRight",
       });
       setIsModalOpen(false);
       form.resetFields();
       fetchCvs();
-      return Promise.resolve();
     } catch (error: any) {
       notification.error({
         key: "save-error",
-        message: error?.errorFields
+        title: error?.errorFields
           ? t("notif.validationError")
           : t("notif.error"),
         ...(error?.errorFields
@@ -136,7 +135,6 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
             }),
         placement: "bottomRight",
       });
-      return Promise.reject();
     } finally {
       setLoading(false);
     }
@@ -150,14 +148,14 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       fetchCvs();
       notification.success({
         key: "delete-success",
-        message: t("notif.success"),
+        title: t("notif.success"),
         description: t("notif.deleteSuccess", { entity: t("cv.title") }),
         placement: "bottomRight",
       });
     } catch (error: any) {
       notification.error({
         key: "delete-error",
-        message: t("notif.error"),
+        title: t("notif.error"),
         description:
           error?.message ||
           t("notif.deleteFailed", { entity: t("cv.title") }),
@@ -179,7 +177,7 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       fetchCvs();
       notification.success({
         key: "toggle-status-success",
-        message: t("notif.success"),
+        title: t("notif.success"),
         description: t("notif.toggleSuccess", {
           entity: t("cv.title"),
           status:
@@ -190,7 +188,7 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     } catch (error: any) {
       notification.error({
         key: "toggle-status-error",
-        message: t("notif.error"),
+        title: t("notif.error"),
         description:
           error?.message ||
           t("notif.toggleFailed", { entity: t("cv.title") }),
@@ -211,15 +209,17 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       fetchCvs();
       notification.success({
         key: "primary-success",
-        message: t("notif.success"),
-        description: t("common.primary") + " updated",
+        title: t("notif.success"),
+        description: t("notif.primaryUpdated", { entity: t("cv.title") }),
         placement: "bottomRight",
       });
     } catch (error: any) {
       notification.error({
         key: "primary-error",
-        message: t("notif.error"),
-        description: error?.message || "Failed to update primary CV",
+        title: t("notif.error"),
+        description:
+          error?.message ||
+          t("notif.primaryUpdateFailed", { entity: t("cv.title") }),
         placement: "bottomRight",
       });
     }
@@ -389,9 +389,7 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         cancelText={t("common.cancel")}
         confirmLoading={loading}
         width={600}
-        styles={{
-          body: { paddingBlock: "10px" },
-        }}
+        {...modalBodyProps()}
       >
         <FormAdmin formProps={{ form }} layout={formLayout} />
       </Modal>

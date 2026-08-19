@@ -21,14 +21,14 @@ export async function POST(request: Request) {
     const body = await request.json();
     const education = await prisma.education.create({
       data: {
+        education_type: body.educationType === "NONFORMAL" ? "NONFORMAL" : "FORMAL",
         school: body.school,
-        degree: body.degree,
+        degree: body.degree || null,
         field: body.field,
         start_date: new Date(body.startDate),
         end_date: body.endDate ? new Date(body.endDate) : null,
         grade: body.grade,
         description: body.description,
-        courses: body.courses || [],
         status: "ACTIVE",
       },
     });

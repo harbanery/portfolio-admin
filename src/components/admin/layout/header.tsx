@@ -4,7 +4,7 @@ import { Breadcrumb, Button, Grid, Layout, Space } from "antd";
 import { MenuOutlined } from "@ant-design/icons";
 import { usePathname } from "next/navigation";
 import { loadAntdIcon } from "@/components/custom/icon";
-import { menuAdminConfig } from "@/utils/helpers/menu";
+import { menuAdminConfig } from "@/helpers/menu";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 import LanguageToggle from "@/components/locale/LanguageToggle";
 import { useLocale } from "@/components/locale/LocaleProvider";

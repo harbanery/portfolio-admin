@@ -5,10 +5,10 @@ import { loadAntdIcon } from "@/components/custom/icon";
 import { App, Button, Card, Form } from "antd";
 import { useEffect, useState } from "react";
 import LoaderPage from "@/components/admin/loader";
-import { getImagesArray } from "@/utils/helpers/image";
+import { getImagesArray } from "@/helpers/image";
 import { useLocale } from "@/components/locale/LocaleProvider";
-import { skillsOptions } from "@/utils/helpers/skills";
-import { menuContactType } from "@/utils/helpers/menu";
+import { skillsOptions } from "@/helpers/skills";
+import { menuContactType } from "@/helpers/menu";
 import { FormLayout } from "@/models/form";
 
 interface PersonalItem {
@@ -63,7 +63,7 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       console.error("Error fetching personal:", error);
       notification.error({
         key: "fetch-error",
-        message: t("notif.error"),
+        title: t("notif.error"),
         description: t("notif.fetchFailed"),
         placement: "bottomRight",
       });
@@ -100,7 +100,7 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
 
           notification.success({
             key: "save-success",
-            message: t("notif.success"),
+            title: t("notif.success"),
             description: t("notif.saveSuccess", { entity: t("personal.title") }),
             placement: "bottomRight",
           });
@@ -108,7 +108,7 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         } catch (error: any) {
           notification.error({
             key: "save-error",
-            message: error?.errorFields
+            title: error?.errorFields
               ? t("notif.validationError")
               : t("notif.error"),
             ...(error?.errorFields
