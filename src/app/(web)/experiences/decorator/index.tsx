@@ -72,13 +72,13 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     const imagesArray = await getImagesArray(values.images);
     const [start, end] = values.period || [];
     return {
-      job_title: values.job_title,
-      company_name: values.company_name,
+      jobTitle: values.job_title,
+      companyName: values.company_name,
       description: values.description,
       images: imagesArray,
-      start_date: start?.toISOString(),
-      end_date: values.is_present ? null : end?.toISOString(),
-      is_present: values.is_present ?? false,
+      startDate: start?.toISOString(),
+      endDate: values.is_present ? null : end?.toISOString(),
+      isPresent: values.is_present ?? false,
     };
   };
 

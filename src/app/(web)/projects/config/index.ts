@@ -20,6 +20,20 @@ export const formLayout: FormLayout[] = [
         required: true,
       },
       {
+        name: "company_name",
+        type: "select",
+        required: true,
+        dependencies: ["project_type"],
+        hiddenWhen: { field: "project_type", notEquals: "internal" },
+      },
+      {
+        name: "client_name",
+        type: "input",
+        required: true,
+        dependencies: ["project_type"],
+        hiddenWhen: { field: "project_type", notEquals: "client" },
+      },
+      {
         name: "role",
         type: "select",
         required: true,

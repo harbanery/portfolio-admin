@@ -39,6 +39,8 @@ interface ProjectItem {
   title: string;
   subtitle?: string;
   project_type?: string;
+  company_name?: string | null;
+  client_name?: string | null;
   role: string;
   skills: string[];
   image: string;
@@ -116,6 +118,9 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   const [projectItems, setProjectItems] = useState<ProjectItem[]>([]);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ProjectItem | null>(null);
+  const [companyOptions, setCompanyOptions] = useState<
+    Array<{ label: string; value: string }>
+  >([]);
   const [isEditMode, setIsEditMode] = useState(false);
 
   const fetchProjects = async () => {
@@ -136,6 +141,38 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       });
     } finally {
       setFetching(false);
+    }
+  };
+
+  /**
+   * Opsi nama perusahaan untuk project internal, diambil dari data
+   * educations (school) dan experiences (company_name).
+   */
+  const fetchCompanyOptions = async () => {
+    try {
+      const [eduRes, expRes] = await Promise.all([
+        fetch("/api/educations"),
+        fetch("/api/experiences"),
+      ]);
+      const [edu, exp] = await Promise.all([eduRes.json(), expRes.json()]);
+      const names = new Set<string>();
+      if (edu?.success && Array.isArray(edu.data)) {
+        edu.data.forEach((e: { school?: string }) => {
+          if (e.school) names.add(e.school);
+        });
+      }
+      if (exp?.success && Array.isArray(exp.data)) {
+        exp.data.forEach((e: { company_name?: string }) => {
+          if (e.company_name) names.add(e.company_name);
+        });
+      }
+      setCompanyOptions(
+        Array.from(names)
+          .sort((a, b) => a.localeCompare(b))
+          .map((n) => ({ label: n, value: n })),
+      );
+    } catch (error) {
+      console.error("Error fetching company options:", error);
     }
   };
 
@@ -194,6 +231,8 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       title: values.title,
       subtitle: values.subtitle,
       projectType: values.project_type,
+      companyName: values.project_type === "internal" ? values.company_name : null,
+      clientName: values.project_type === "client" ? values.client_name : null,
       role: values.role,
       image: imageString,
       images: imagesArray,
@@ -330,6 +369,7 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       label: t(`option.project.${p.value}`),
       value: p.value,
     })),
+    company_name: companyOptions,
   };
 
   const getRoleLabel = (role: string) => {
@@ -337,10 +377,27 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   };
 
   const setDetailFields = (item: ProjectItem) => {
+    /* Pastikan nilai company yang tersimpan tetap muncul di opsi select. */
+    if (
+      item.company_name &&
+      !companyOptions.some((o) => o.value === item.company_name)
+    ) {
+      setCompanyOptions((prev) =>
+        prev.some((o) => o.value === item.company_name)
+          ? prev
+          : [
+              ...prev,
+              { label: item.company_name!, value: item.company_name! },
+            ].sort((a, b) => a.label.localeCompare(b.label)),
+      );
+    }
+
     detailForm.setFieldsValue({
       title: item.title,
       subtitle: item.subtitle,
       project_type: item.project_type,
+      company_name: item.company_name,
+      client_name: item.client_name,
       role: item.role,
       image: item.image
         ? [{ url: item.image, thumbUrl: item.image, status: "done" }]
@@ -429,6 +486,7 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
 
   useEffect(() => {
     fetchProjects();
+    fetchCompanyOptions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -546,6 +604,11 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                             <p className="text-sm text-gray-500 m-0">
                               {getRoleLabel(item.role)}
                             </p>
+                            {(item.company_name || item.client_name) && (
+                              <p className="text-xs text-gray-400 dark:text-gray-500 m-0 truncate">
+                                {item.company_name || item.client_name}
+                              </p>
+                            )}
                           </div>
                           <div>
                             <Tag
@@ -626,7 +689,7 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         {...modalBodyProps()}
       >
         <FormAdmin
-          formProps={{ form }}
+          formProps={{ form, initialValues: { project_type: "personal" } }}
           layout={formLayout}
           optionList={options}
         />
