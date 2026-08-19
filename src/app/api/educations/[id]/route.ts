@@ -44,6 +44,7 @@ export async function PUT(
         end_date: body.endDate ? new Date(body.endDate) : null,
         grade: body.grade,
         description: body.description,
+        courses: Array.isArray(body.courses) ? body.courses : [],
       },
     });
     return NextResponse.json({ success: true, data: education });

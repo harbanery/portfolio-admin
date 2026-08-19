@@ -570,17 +570,6 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                           </div>
                         )}
 
-                        <div
-                          className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 text-justify m-0"
-                          dangerouslySetInnerHTML={{
-                            __html:
-                              item.description ??
-                              t("col.description") +
-                                " - " +
-                                t("common.optional"),
-                          }}
-                        />
-
                         <div className="flex flex-wrap gap-y-1">
                           {item.skills?.map((skill) => (
                             <Tag key={skill}>{skill}</Tag>
