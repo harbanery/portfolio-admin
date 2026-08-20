@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import LoaderPage from "@/components/admin/loader";
 import { modalBodyProps } from "@/helpers/modal";
+import { asAppError } from "@/helpers/error";
 import { getImagesArray } from "@/helpers/image";
 import { useLocale } from "@/components/locale/LocaleProvider";
 import { FormLayout } from "@/models/form";
@@ -25,17 +26,25 @@ interface ExperienceItem {
   status: ExperienceStatus;
 }
 
+interface ExperienceFormValues {
+  job_title: string;
+  company_name: string;
+  description?: string | null;
+  images?: unknown;
+  period?: Array<dayjs.Dayjs | undefined>;
+  is_present?: boolean;
+}
+
+const PlusIcon = loadAntdIcon("PlusOutlined");
+const DeleteIcon = loadAntdIcon("DeleteOutlined");
+const CheckIcon = loadAntdIcon("CheckOutlined");
+const StopIcon = loadAntdIcon("StopOutlined");
+
 const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   const { t } = useLocale();
-  const PlusIcon = loadAntdIcon("PlusOutlined");
-  const EditIcon = loadAntdIcon("EditOutlined");
-  const SaveIcon = loadAntdIcon("SaveOutlined");
-  const DeleteIcon = loadAntdIcon("DeleteOutlined");
-  const CheckIcon = loadAntdIcon("CheckOutlined");
-  const StopIcon = loadAntdIcon("StopOutlined");
 
-  const [form] = Form.useForm();
-  const [detailForm] = Form.useForm();
+  const [form] = Form.useForm<ExperienceFormValues>();
+  const [detailForm] = Form.useForm<ExperienceFormValues>();
   const dataDetail = Form.useWatch([], detailForm);
   const { notification, modal } = App.useApp();
 
@@ -45,10 +54,8 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   const [items, setItems] = useState<ExperienceItem[]>([]);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ExperienceItem | null>(null);
-  const [isEditMode, setIsEditMode] = useState(false);
 
   const fetchExperiences = async () => {
-    setFetching(true);
     try {
       const response = await fetch("/api/experiences");
       const result = await response.json();
@@ -68,7 +75,7 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     }
   };
 
-  const toPayload = async (values: Record<string, any>) => {
+  const toPayload = async (values: ExperienceFormValues) => {
     const imagesArray = await getImagesArray(values.images);
     const [start, end] = values.period || [];
     return {
@@ -109,15 +116,16 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       setIsModalOpen(false);
       form.resetFields();
       fetchExperiences();
-    } catch (error: any) {
+    } catch (error) {
+      const err = asAppError(error);
       notification.error({
         key: "save-error",
-        title: error?.errorFields ? t("notif.validationError") : t("notif.error"),
-        ...(error?.errorFields
+        title: err.errorFields ? t("notif.validationError") : t("notif.error"),
+        ...(err.errorFields
           ? {}
           : {
               description:
-                error?.message ||
+                err.message ||
                 t("notif.saveFailed", { entity: t("experiences.title") }),
             }),
         placement: "bottomRight",
@@ -143,12 +151,13 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         }),
         placement: "bottomRight",
       });
-    } catch (error: any) {
+    } catch (error) {
+      const err = asAppError(error);
       notification.error({
         key: "delete-error",
         title: t("notif.error"),
         description:
-          error?.message ||
+          err.message ||
           t("notif.deleteFailed", { entity: t("experiences.title") }),
         placement: "bottomRight",
       });
@@ -180,12 +189,13 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         }),
         placement: "bottomRight",
       });
-    } catch (error: any) {
+    } catch (error) {
+      const err = asAppError(error);
       notification.error({
         key: "toggle-status-error",
         title: t("notif.error"),
         description:
-          error?.message ||
+          err.message ||
           t("notif.toggleFailed", { entity: t("experiences.title") }),
         placement: "bottomRight",
       });
@@ -206,7 +216,6 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     setSelectedItem(item);
     setDetailFields(item);
     setIsDetailModalOpen(true);
-    setIsEditMode(false);
   };
 
   const setDetailFields = (item: Partial<ExperienceItem>) => {
@@ -214,7 +223,11 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       job_title: item.job_title,
       company_name: item.company_name,
       description: item.description,
-      images: item.images?.map((url) => ({ url, thumbUrl: url, status: "done" })),
+      images: item.images?.map((url) => ({
+        url,
+        thumbUrl: url,
+        status: "done",
+      })),
       period: item.start_date
         ? [
             dayjs(item.start_date),
@@ -228,15 +241,7 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   const handleCloseDetail = () => {
     setIsDetailModalOpen(false);
     setSelectedItem(null);
-    setIsEditMode(false);
     detailForm.resetFields();
-  };
-
-  const handleEditToggle = () => {
-    if (isEditMode && selectedItem) {
-      setDetailFields(selectedItem);
-    }
-    setIsEditMode(!isEditMode);
   };
 
   const handleSaveEdit = async () => {
@@ -258,17 +263,18 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         description: t("notif.saveSuccess", { entity: t("experiences.title") }),
         placement: "bottomRight",
       });
-      setIsEditMode(false);
       fetchExperiences();
-    } catch (error: any) {
+      handleCloseDetail();
+    } catch (error) {
+      const err = asAppError(error);
       notification.error({
         key: "edit-error",
-        title: error?.errorFields ? t("notif.validationError") : t("notif.error"),
-        ...(error?.errorFields
+        title: err.errorFields ? t("notif.validationError") : t("notif.error"),
+        ...(err.errorFields
           ? {}
           : {
               description:
-                error?.message ||
+                err.message ||
                 t("notif.saveFailed", { entity: t("experiences.title") }),
             }),
         placement: "bottomRight",
@@ -279,7 +285,9 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   };
 
   useEffect(() => {
-    fetchExperiences();
+    // Defer via microtask agar setState di dalam fetchExperiences tidak
+    // dipanggil sinkron dari effect (pola yang sama dengan admin/form).
+    void Promise.resolve().then(fetchExperiences);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -420,61 +428,18 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       </Modal>
 
       <Modal
-        title={
-          <div className="flex justify-between items-center pr-8">
-            <span>{t("experiences.detail")}</span>
-            <div className="flex gap-2">
-              {isEditMode && (
-                <Button
-                  variant="filled"
-                  color="default"
-                  size="small"
-                  onClick={handleEditToggle}
-                >
-                  {t("common.cancel")}
-                </Button>
-              )}
-              <Button
-                style={{ fontWeight: 600 }}
-                icon={isEditMode ? <SaveIcon /> : <EditIcon />}
-                variant="solid"
-                color={isEditMode ? "volcano" : "geekblue"}
-                iconPlacement="end"
-                size="small"
-                onClick={
-                  isEditMode
-                    ? () =>
-                        modal.confirm({
-                          title: t("notif.confirmSave"),
-                          okText: t("common.yes"),
-                          cancelText: t("common.no"),
-                          okButtonProps: {
-                            style: { fontWeight: 600 },
-                            variant: "solid",
-                            color: "primary",
-                          },
-                          cancelButtonProps: {
-                            variant: "filled",
-                            color: "default",
-                          },
-                          onOk: handleSaveEdit,
-                        })
-                    : handleEditToggle
-                }
-              >
-                {isEditMode ? t("common.save") : t("common.edit")}
-              </Button>
-            </div>
-          </div>
-        }
+        title={t("experiences.detail")}
         open={isDetailModalOpen}
+        onOk={handleSaveEdit}
         onCancel={handleCloseDetail}
-        footer={null}
+        okText={t("common.save")}
+        cancelText={t("common.cancel")}
+        confirmLoading={loading}
         width={700}
         {...modalBodyProps()}
       >
         <FormAdmin
-          formProps={{ form: detailForm, disabled: !isEditMode }}
+          formProps={{ form: detailForm }}
           layout={formLayout}
           formValue={dataDetail}
         />

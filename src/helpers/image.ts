@@ -1,43 +1,60 @@
+/** Bentuk file antd Upload yang dipakai aplikasi (termasuk metadata upload). */
+export interface UploadFileLike {
+  uid?: string | number;
+  name?: string;
+  url?: string;
+  thumbUrl?: string;
+  status?: string;
+  originFileObj?: File;
+  storagePath?: string;
+  response?: { success?: boolean; data?: { url?: string; storagePath?: string } };
+}
+
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === "string" && value.length > 0;
+
 /** Konversi fileList antd Upload menjadi string URL (Cloudinary atau base64). */
-export async function getImageString(imageValue: any): Promise<string> {
+export async function getImageString(imageValue: unknown): Promise<string> {
   if (!imageValue) return "";
   if (typeof imageValue === "string") return imageValue;
 
   // Handle Ant Design Upload file list
   if (Array.isArray(imageValue) && imageValue.length > 0) {
-    const file = imageValue[0];
-    if (file.url) return file.url;
-    if (file.response?.data?.url) return file.response.data.url;
-    if (file.originFileObj) {
-      return fileToBase64(file.originFileObj);
-    }
-    if (file.thumbUrl) return file.thumbUrl;
+    const url = await fileEntryToUrl(imageValue[0]);
+    if (url) return url;
+    return "";
   }
 
   // Handle single file object
-  if (imageValue.originFileObj) {
-    return fileToBase64(imageValue.originFileObj);
-  }
-
-  return "";
+  const singleUrl = await fileEntryToUrl(imageValue);
+  return singleUrl ?? "";
 }
 
 /** Konversi fileList antd Upload menjadi array string URL (Cloudinary atau base64). */
-export async function getImagesArray(imageValue: any): Promise<string[]> {
+export async function getImagesArray(imageValue: unknown): Promise<string[]> {
   if (!imageValue || !Array.isArray(imageValue)) return [];
   const results: string[] = [];
-  for (const file of imageValue) {
-    if (file.url) {
-      results.push(file.url);
-    } else if (file.response?.data?.url) {
-      results.push(file.response.data.url);
-    } else if (file.originFileObj) {
-      results.push(await fileToBase64(file.originFileObj));
-    } else if (file.thumbUrl) {
-      results.push(file.thumbUrl);
-    }
+  for (const entry of imageValue) {
+    const url = await fileEntryToUrl(entry);
+    if (url) results.push(url);
   }
   return results;
+}
+
+/** Ambil URL dari satu entri file upload (url / response / originFileObj / thumbUrl). */
+async function fileEntryToUrl(entry: unknown): Promise<string | null> {
+  if (typeof entry === "string") return entry;
+  if (!entry || typeof entry !== "object") return null;
+
+  const file = entry as UploadFileLike;
+  if (isNonEmptyString(file.url)) return file.url;
+  const responseUrl = file.response?.data?.url;
+  if (isNonEmptyString(responseUrl)) return responseUrl;
+  if (file.originFileObj instanceof File) {
+    return fileToBase64(file.originFileObj);
+  }
+  if (isNonEmptyString(file.thumbUrl)) return file.thumbUrl;
+  return null;
 }
 
 /** Konversi File menjadi data URL base64. */

@@ -5,6 +5,7 @@ export const menuKeys = [
   "projects",
   "certifications",
   "educations",
+  "publications",
   "cv",
 ] as const;
 
@@ -32,6 +33,12 @@ export const menuAdminConfig = [
     icon: "ReadOutlined",
     active: true,
   },
+  {
+    key: "publications",
+    link: "/publications",
+    icon: "BookOutlined",
+    active: true,
+  },
   { key: "cv", link: "/cv", icon: "FileTextOutlined", active: true },
 ];
 
@@ -49,6 +56,20 @@ export const menuProjectType = [
   { label: "Personal", value: "personal" },
   { label: "Internal/Company", value: "internal" },
   { label: "Client", value: "client" },
+];
+
+export const menuPublicationType = [
+  { label: "Journal", value: "JOURNAL" },
+  { label: "Conference", value: "CONFERENCE" },
+  { label: "Book", value: "BOOK" },
+  { label: "Preprint", value: "PREPRINT" },
+  { label: "Other", value: "OTHER" },
+];
+
+export const menuFileOrigin = [
+  { label: "None", value: "NONE" },
+  { label: "URL", value: "URL" },
+  { label: "Upload", value: "UPLOAD" },
 ];
 
 export const menuContactType = [

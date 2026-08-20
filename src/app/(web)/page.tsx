@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import DashboardDecorator from "./decorator";
+import DashboardDecorator, { type DashboardData } from "./decorator";
 import LoaderPage from "@/components/admin/loader";
 
 export default function DashboardPage() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<DashboardData | null>(null);
   const [fetching, setFetching] = useState(true);
 
   useEffect(() => {

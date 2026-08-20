@@ -1,12 +1,14 @@
 import { FormProps, SelectProps, FormInstance } from "antd";
+import type { NamePath } from "antd/es/form/interface";
+import type { DefaultOptionType } from "antd/es/select";
 import { Rule } from "antd/es/form";
 import { ReactNode } from "react";
 
 export interface FormAdminProps {
   layout: FormLayout[];
   formProps?: FormProps;
-  optionList?: Record<string, any[]>;
-  formValue?: any;
+  optionList?: Record<string, DefaultOptionType[]>;
+  formValue?: unknown;
   customComponent?: Record<string, ReactNode>;
 }
 
@@ -46,8 +48,8 @@ export type FormLayoutItem = {
 
 export interface FieldProps {
   key?: string;
-  name: any;
-  value?: any;
+  name: NamePath;
+  value?: unknown;
   label?: string;
   type?: string;
   placeholder?: string;
@@ -55,6 +57,7 @@ export interface FieldProps {
   icon?: string;
   rules?: Rule[];
   select?: SelectProps;
+  accept?: string;
   uploadHint?: { hint: string; subHint: string };
   formInstance?: FormInstance;
 }

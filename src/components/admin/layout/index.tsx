@@ -4,7 +4,6 @@ import { Layout } from "antd";
 import { useState } from "react";
 import SiderLayout from "./sider";
 import HeaderLayout from "./header";
-import FooterLayout from "./footer";
 import ContentLayout from "./content";
 
 const BaseLayout = ({ children }: { children: React.ReactNode }) => {

@@ -16,6 +16,7 @@ export const loadAntdIcon: DynamicIconLoader<AntdIconProps> = (iconName) => {
 
     useEffect(() => {
       if (!antdIconCache[iconName]) {
+        let cancelled = false;
         const loadIcon = async () => {
           try {
             const mod = await import("@ant-design/icons");
@@ -23,7 +24,7 @@ export const loadAntdIcon: DynamicIconLoader<AntdIconProps> = (iconName) => {
               iconName as keyof typeof mod
             ] as React.ComponentType<AntdIconProps>;
             antdIconCache[iconName] = Component;
-            setIconComponent(Component);
+            if (!cancelled) setIconComponent(Component);
           } catch (error) {
             console.error(
               `Error loading Ant Design icon "${iconName}":`,
@@ -32,8 +33,11 @@ export const loadAntdIcon: DynamicIconLoader<AntdIconProps> = (iconName) => {
           }
         };
         loadIcon();
+        return () => {
+          cancelled = true;
+        };
       }
-    }, [iconName]);
+    }, []);
 
     return IconComponent ? (
       <IconComponent {...props} />

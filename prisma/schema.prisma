@@ -57,7 +57,7 @@ model LoginAttempt {
   blockedUntil  DateTime?
   lastAttemptAt DateTime  @default(now())
   createdAt     DateTime  @default(now())
-  updatedAt     DateTime @updatedAt
+  updatedAt     DateTime  @updatedAt
 
   @@index([ipAddress])
 }
@@ -114,13 +114,12 @@ model Portfolio {
   repo_links        String[]
   web_link          String?
   status            PortfolioStatus @default(ACTIVE)
-  order             Int              @default(0)
+  order             Int             @default(0)
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
   @@index([order])
 }
-
 
 model Session {
   id        String   @id
@@ -152,24 +151,46 @@ enum EducationStatus {
   NONACTIVE
 }
 
+enum PublicationStatus {
+  ACTIVE
+  NONACTIVE
+}
+
+enum PublicationType {
+  JOURNAL
+  CONFERENCE
+  BOOK
+  PREPRINT
+  OTHER
+}
+
 enum CvStatus {
   ACTIVE
   NONACTIVE
 }
 
+enum FileOrigin {
+  NONE
+  URL
+  UPLOAD
+}
+
 model Certification {
-  id            Int                  @id @default(autoincrement())
-  title         String
-  issuer        String
-  issue_date    DateTime
-  expiry_date   DateTime?
-  credential_id String?
-  credential_url String?
-  image         String?
-  skills        String[]
-  status        CertificationStatus  @default(ACTIVE)
-  createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @updatedAt
+  id                Int                 @id @default(autoincrement())
+  title             String
+  issuer            String
+  issue_date        DateTime
+  expiry_date       DateTime?
+  credential_id     String?
+  credential_url    String?
+  image             String?
+  skills            String[]
+  file_type         FileOrigin          @default(NONE)
+  file_url          String?
+  file_storage_path String?
+  status            CertificationStatus @default(ACTIVE)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
 }
 
 enum EducationType {
@@ -188,18 +209,43 @@ model Education {
   grade          String?
   description    String?
   courses        String[]        @default([])
-  status         EducationStatus  @default(ACTIVE)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  status         EducationStatus @default(ACTIVE)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
 model Cv {
-  id          Int      @id @default(autoincrement())
-  name        String
-  file_url    String
-  description String?
-  is_primary  Boolean  @default(false)
-  status      CvStatus  @default(ACTIVE)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                Int        @id @default(autoincrement())
+  name              String
+  file_type         FileOrigin @default(URL)
+  file_url          String
+  file_storage_path String?
+  description       String?
+  is_primary        Boolean    @default(false)
+  status            CvStatus   @default(ACTIVE)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+}
+
+model Publication {
+  id               Int               @id @default(autoincrement())
+  title            String
+  authors          String[]          @default([])
+  publication_type PublicationType   @default(JOURNAL)
+  publisher        String?
+  journal_name     String?
+  volume           String?
+  issue            String?
+  pages            String?
+  doi              String?
+  url              String?
+  pdf_url          String?
+  scholar_url      String?
+  abstract         String?
+  publish_date     DateTime
+  citations        Int               @default(0)
+  skills           String[]          @default([])
+  status           PublicationStatus @default(ACTIVE)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 }

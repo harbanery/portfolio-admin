@@ -25,6 +25,7 @@ const ClockCircleOutlined = loadAntdIcon("ClockCircleOutlined");
 const HistoryOutlined = loadAntdIcon("HistoryOutlined");
 const SafetyCertificateOutlined = loadAntdIcon("SafetyCertificateOutlined");
 const ReadOutlined = loadAntdIcon("ReadOutlined");
+const BookOutlined = loadAntdIcon("BookOutlined");
 const FileTextOutlined = loadAntdIcon("FileTextOutlined");
 
 import type { ColumnsType } from "antd/es/table";
@@ -44,6 +45,7 @@ interface DashboardStats {
   activeExperiencesCount: number;
   totalCertificationsCount: number;
   totalEducationsCount: number;
+  totalPublicationsCount: number;
   totalCvsCount: number;
 }
 
@@ -66,7 +68,7 @@ interface RecentProject {
   createdAt: Date | string;
 }
 
-interface DashboardData {
+export interface DashboardData {
   stats: DashboardStats;
   analytics: DashboardAnalytics;
   recentProjects: RecentProject[];
@@ -126,6 +128,12 @@ const DashboardDecorator = ({ data }: { data: DashboardData | null }) => {
       value: stats?.totalEducationsCount || 0,
       prefix: <ReadOutlined />,
       color: "#eb2f96",
+    },
+    {
+      title: t("dashboard.stat.publications"),
+      value: stats?.totalPublicationsCount || 0,
+      prefix: <BookOutlined />,
+      color: "#a0d911",
     },
     {
       title: t("dashboard.stat.cv"),

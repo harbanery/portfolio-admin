@@ -5,6 +5,7 @@ import { loadAntdIcon } from "@/components/custom/icon";
 import { App, Button, Card, Form } from "antd";
 import { useEffect, useState } from "react";
 import LoaderPage from "@/components/admin/loader";
+import { asAppError } from "@/helpers/error";
 import { getImagesArray } from "@/helpers/image";
 import { useLocale } from "@/components/locale/LocaleProvider";
 import { skillsOptions } from "@/helpers/skills";
@@ -20,11 +21,20 @@ interface PersonalItem {
   PersonalImage: Array<{ id: number; url: string }>;
 }
 
+interface PersonalFormValues {
+  name: string;
+  about?: string | null;
+  skills?: string[];
+  contacts?: Array<{ type: string; value: string }>;
+  images?: unknown;
+}
+
+const SaveIcon = loadAntdIcon("SaveOutlined");
+
 const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   const { t } = useLocale();
-  const SaveIcon = loadAntdIcon("SaveOutlined");
 
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<PersonalFormValues>();
   const { notification, modal } = App.useApp();
 
   const [loading, setLoading] = useState(false);
@@ -40,7 +50,6 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   };
 
   const fetchPersonal = async () => {
-    setFetching(true);
     try {
       const response = await fetch("/api/personal");
       const result = await response.json();
@@ -105,17 +114,18 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
             placement: "bottomRight",
           });
           fetchPersonal();
-        } catch (error: any) {
+        } catch (error) {
+          const err = asAppError(error);
           notification.error({
             key: "save-error",
-            title: error?.errorFields
+            title: err.errorFields
               ? t("notif.validationError")
               : t("notif.error"),
-            ...(error?.errorFields
+            ...(err.errorFields
               ? {}
               : {
                   description:
-                    error?.message ||
+                    err.message ||
                     t("notif.saveFailed", { entity: t("personal.title") }),
                 }),
             placement: "bottomRight",
@@ -128,7 +138,9 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   };
 
   useEffect(() => {
-    fetchPersonal();
+    // Defer via microtask agar setState di dalam fetchPersonal tidak
+    // dipanggil sinkron dari effect (pola yang sama dengan admin/form).
+    void Promise.resolve().then(fetchPersonal);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

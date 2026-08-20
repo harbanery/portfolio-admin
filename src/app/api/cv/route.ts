@@ -26,7 +26,9 @@ export async function POST(request: Request) {
     const cv = await prisma.cv.create({
       data: {
         name: body.name,
-        file_url: body.fileUrl,
+        file_type: body.fileType ?? "URL",
+        file_url: body.fileUrl ?? "",
+        file_storage_path: body.fileStoragePath ?? null,
         description: body.description,
         is_primary: body.isPrimary ?? false,
         status: "ACTIVE",

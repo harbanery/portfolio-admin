@@ -17,31 +17,47 @@ import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import LoaderPage from "@/components/admin/loader";
 import { modalBodyProps } from "@/helpers/modal";
+import { asAppError } from "@/helpers/error";
+import { getImagesArray, type UploadFileLike } from "@/helpers/image";
+import { menuFileOrigin } from "@/helpers/menu";
 import { useLocale } from "@/components/locale/LocaleProvider";
 import { FormLayout } from "@/models/form";
 
 export type CvStatus = "ACTIVE" | "NONACTIVE";
+export type CvFileType = "URL" | "UPLOAD";
 
 interface CvItem {
   id: number;
   name: string;
+  file_type: CvFileType;
   file_url: string;
+  file_storage_path?: string | null;
   description?: string | null;
   is_primary: boolean;
   status: CvStatus;
   createdAt: string;
 }
 
+interface CvFormValues {
+  name: string;
+  file_type?: CvFileType;
+  file_url?: string;
+  file_upload?: UploadFileLike[];
+  description?: string | null;
+  is_primary?: boolean;
+}
+
+const PlusIcon = loadAntdIcon("PlusOutlined");
+const DeleteIcon = loadAntdIcon("DeleteOutlined");
+const LinkIcon = loadAntdIcon("LinkOutlined");
+const CheckIcon = loadAntdIcon("CheckOutlined");
+const StopIcon = loadAntdIcon("StopOutlined");
+const StarIcon = loadAntdIcon("StarOutlined");
+
 const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   const { t } = useLocale();
-  const PlusIcon = loadAntdIcon("PlusOutlined");
-  const DeleteIcon = loadAntdIcon("DeleteOutlined");
-  const LinkIcon = loadAntdIcon("LinkOutlined");
-  const CheckIcon = loadAntdIcon("CheckOutlined");
-  const StopIcon = loadAntdIcon("StopOutlined");
-  const StarIcon = loadAntdIcon("StarOutlined");
 
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<CvFormValues>();
   const { notification, modal } = App.useApp();
 
   const [loading, setLoading] = useState(false);
@@ -50,8 +66,14 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   const [items, setItems] = useState<CvItem[]>([]);
   const [editingItem, setEditingItem] = useState<CvItem | null>(null);
 
+  const fileTypeOptions = menuFileOrigin
+    .filter((f) => f.value !== "NONE")
+    .map((f) => ({
+      label: t(`option.file.${f.value}`),
+      value: f.value,
+    }));
+
   const fetchCvs = async () => {
-    setFetching(true);
     try {
       const response = await fetch("/api/cv");
       const result = await response.json();
@@ -71,12 +93,29 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     }
   };
 
-  const toPayload = (values: Record<string, any>) => ({
-    name: values.name,
-    fileUrl: values.file_url,
-    description: values.description,
-    isPrimary: values.is_primary ?? false,
-  });
+  const toPayload = async (values: CvFormValues) => {
+    const fileType = values.file_type ?? "URL";
+
+    // Ambil URL file sesuai tipe: URL manual atau hasil upload Cloudinary.
+    let fileUrl: string | null = null;
+    let fileStoragePath: string | null = null;
+    if (fileType === "URL") {
+      fileUrl = values.file_url || null;
+    } else if (fileType === "UPLOAD" && Array.isArray(values.file_upload)) {
+      const uploaded = await getImagesArray(values.file_upload);
+      fileUrl = uploaded[0] ?? null;
+      fileStoragePath = values.file_upload[0]?.storagePath ?? null;
+    }
+
+    return {
+      name: values.name,
+      fileType,
+      fileUrl,
+      fileStoragePath,
+      description: values.description,
+      isPrimary: values.is_primary ?? false,
+    };
+  };
 
   const handleAdd = () => {
     setEditingItem(null);
@@ -88,7 +127,19 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     setEditingItem(item);
     form.setFieldsValue({
       name: item.name,
-      file_url: item.file_url,
+      file_type: item.file_type ?? "URL",
+      file_url: item.file_type === "URL" ? item.file_url : undefined,
+      file_upload:
+        item.file_type === "UPLOAD" && item.file_url
+          ? [
+              {
+                uid: "-1",
+                name: item.file_url.split("/").pop() || "file",
+                status: "done",
+                url: item.file_url,
+              },
+            ]
+          : undefined,
       description: item.description,
       is_primary: item.is_primary,
     });
@@ -99,7 +150,7 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     setLoading(true);
     try {
       const values = await form.validateFields();
-      const payload = toPayload(values);
+      const payload = await toPayload(values);
       const response = await fetch(
         editingItem ? `/api/cv/${editingItem.id}` : "/api/cv",
         {
@@ -120,17 +171,18 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       setIsModalOpen(false);
       form.resetFields();
       fetchCvs();
-    } catch (error: any) {
+    } catch (error) {
+      const err = asAppError(error);
       notification.error({
         key: "save-error",
-        title: error?.errorFields
+        title: err.errorFields
           ? t("notif.validationError")
           : t("notif.error"),
-        ...(error?.errorFields
+        ...(err.errorFields
           ? {}
           : {
               description:
-                error?.message ||
+                err.message ||
                 t("notif.saveFailed", { entity: t("cv.title") }),
             }),
         placement: "bottomRight",
@@ -152,12 +204,13 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         description: t("notif.deleteSuccess", { entity: t("cv.title") }),
         placement: "bottomRight",
       });
-    } catch (error: any) {
+    } catch (error) {
+      const err = asAppError(error);
       notification.error({
         key: "delete-error",
         title: t("notif.error"),
         description:
-          error?.message ||
+          err.message ||
           t("notif.deleteFailed", { entity: t("cv.title") }),
         placement: "bottomRight",
       });
@@ -185,12 +238,13 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         }),
         placement: "bottomRight",
       });
-    } catch (error: any) {
+    } catch (error) {
+      const err = asAppError(error);
       notification.error({
         key: "toggle-status-error",
         title: t("notif.error"),
         description:
-          error?.message ||
+          err.message ||
           t("notif.toggleFailed", { entity: t("cv.title") }),
         placement: "bottomRight",
       });
@@ -213,12 +267,13 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         description: t("notif.primaryUpdated", { entity: t("cv.title") }),
         placement: "bottomRight",
       });
-    } catch (error: any) {
+    } catch (error) {
+      const err = asAppError(error);
       notification.error({
         key: "primary-error",
         title: t("notif.error"),
         description:
-          error?.message ||
+          err.message ||
           t("notif.primaryUpdateFailed", { entity: t("cv.title") }),
         placement: "bottomRight",
       });
@@ -226,7 +281,9 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   };
 
   useEffect(() => {
-    fetchCvs();
+    // Defer via microtask agar setState di dalam fetchCvs tidak dipanggil
+    // sinkron dari effect (pola yang sama dengan admin/form).
+    void Promise.resolve().then(fetchCvs);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -391,7 +448,11 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         width={600}
         {...modalBodyProps()}
       >
-        <FormAdmin formProps={{ form }} layout={formLayout} />
+        <FormAdmin
+          formProps={{ form, initialValues: { file_type: "URL" } }}
+          layout={formLayout}
+          optionList={{ file_type: fileTypeOptions }}
+        />
       </Modal>
     </section>
   );

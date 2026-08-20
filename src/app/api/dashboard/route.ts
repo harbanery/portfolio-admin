@@ -11,6 +11,7 @@ export async function GET() {
       activeExperiences,
       totalCertifications,
       totalEducations,
+      totalPublications,
       totalCvs,
       recentProjects,
     ] = await Promise.all([
@@ -21,6 +22,7 @@ export async function GET() {
       prisma.experience.count({ where: { status: "ACTIVE" } }),
       prisma.certification.count(),
       prisma.education.count(),
+      prisma.publication.count(),
       prisma.cv.count(),
       prisma.portfolio.findMany({
         orderBy: { createdAt: "desc" },
@@ -67,6 +69,7 @@ export async function GET() {
           activeExperiencesCount: activeExperiences,
           totalCertificationsCount: totalCertifications,
           totalEducationsCount: totalEducations,
+          totalPublicationsCount: totalPublications,
           totalCvsCount: totalCvs,
         },
         analytics: {

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "node:crypto";
 
 function generateUploadSignature(
   params: Record<string, string | number>,
   apiSecret: string,
 ): string {
-  const crypto = require("node:crypto");
   const sortedParams = Object.keys(params)
     .sort((a, b) => a.localeCompare(b))
     .map((key) => `${key}=${params[key]}`)
@@ -56,8 +56,14 @@ export async function POST(request: NextRequest) {
     formData.append("folder", folder);
     formData.append("signature", signature);
 
+    const isImage = file.type.startsWith("image/");
+    // Gunakan endpoint `image` untuk gambar dan `auto` untuk dokumen
+    // (PDF/Google Docs/Microsoft Word) agar Cloudinary menentukan
+    // resource type yang tepat secara otomatis.
+    const resourceSegment = isImage ? "image" : "auto";
+
     const cloudinaryResponse = await fetch(
-      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/${resourceSegment}/upload`,
       {
         method: "POST",
         body: formData,
@@ -76,6 +82,7 @@ export async function POST(request: NextRequest) {
       data: {
         url: cloudinaryData.secure_url,
         storagePath: cloudinaryData.public_id,
+        resourceType: cloudinaryData.resource_type,
         mimeType: file.type,
         size: file.size,
         name: file.name,
@@ -110,32 +117,41 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const deleteTimestamp = Math.floor(Date.now() / 1000);
-    const params = {
-      timestamp: deleteTimestamp,
-      public_id: publicId,
+    const destroy = async (resourceType: "image" | "raw") => {
+      const deleteTimestamp = Math.floor(Date.now() / 1000);
+      const params = {
+        timestamp: deleteTimestamp,
+        public_id: publicId,
+      };
+
+      const signature = generateUploadSignature(
+        params,
+        process.env.CLOUDINARY_API_SECRET || "",
+      );
+
+      return fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/${resourceType}/destroy`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            public_id: publicId,
+            api_key: process.env.CLOUDINARY_API_KEY,
+            timestamp: deleteTimestamp,
+            signature: signature,
+          }),
+        },
+      );
     };
 
-    const signature = generateUploadSignature(
-      params,
-      process.env.CLOUDINARY_API_SECRET || "",
-    );
-
-    const cloudinaryResponse = await fetch(
-      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/destroy`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          public_id: publicId,
-          api_key: process.env.CLOUDINARY_API_KEY,
-          timestamp: deleteTimestamp,
-          signature: signature,
-        }),
-      },
-    );
+    // Coba hapus sebagai image terlebih dahulu; jika tidak ditemukan,
+    // coba sebagai raw (file dokumen seperti PDF/DOCX).
+    let cloudinaryResponse = await destroy("image");
+    if (!cloudinaryResponse.ok) {
+      cloudinaryResponse = await destroy("raw");
+    }
 
     if (!cloudinaryResponse.ok) {
       const errorData = await cloudinaryResponse.json();

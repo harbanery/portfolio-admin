@@ -46,6 +46,9 @@ const id: TranslationDict = {
   "common.openLink": "Buka tautan",
   "common.primary": "Utama",
   "common.website": "Website",
+  "common.import": "Impor",
+  "common.downloadTemplate": "Unduh Template",
+  "common.viewFile": "Lihat File",
 
   // Validation & notification
   "validation.required": "{field} wajib diisi.",
@@ -65,6 +68,11 @@ const id: TranslationDict = {
   "notif.confirmDelete": "Yakin ingin menghapus {entity} ini?",
   "notif.confirmSave": "Yakin ingin menyimpan perubahan?",
   "notif.confirmToggle": "Yakin ingin {action} {entity} ini?",
+  "notif.importSuccess": "{count} {entity} berhasil diimpor",
+  "notif.importFailed": "Gagal mengimpor {entity}",
+  "notif.templateDownloaded": "Template {entity} berhasil diunduh",
+  "notif.templateFailed": "Gagal mengunduh template {entity}",
+  "notif.fileRequired": "File wajib diunggah",
 
   // Menu
   "menu.dashboard": "Dashboard",
@@ -73,6 +81,7 @@ const id: TranslationDict = {
   "menu.projects": "Projects",
   "menu.certifications": "Certifications",
   "menu.educations": "Educations",
+  "menu.publications": "Publications",
   "menu.cv": "CV",
 
   // Header & footer
@@ -95,6 +104,7 @@ const id: TranslationDict = {
   "dashboard.stat.experiences": "Experience",
   "dashboard.stat.certifications": "Certification",
   "dashboard.stat.educations": "Education",
+  "dashboard.stat.publications": "Publication",
   "dashboard.stat.cv": "CV",
   "dashboard.chart.activity": "Aktivitas Project (6 Bulan Terakhir)",
   "dashboard.chart.activityBar": "Project Dibuat",
@@ -125,6 +135,14 @@ const id: TranslationDict = {
   "certifications.empty":
     'Belum ada sertifikasi. Klik "Tambah Certification" untuk membuat.',
   "certifications.detail": "Detail Certification",
+
+  // Publications
+  "publications.title": "Publication",
+  "publications.description": "Kelola publikasi, jurnal, dan scholar Anda",
+  "publications.add": "Tambah Publication",
+  "publications.empty":
+    'Belum ada publikasi. Klik "Tambah Publication" untuk membuat.',
+  "publications.detail": "Detail Publication",
 
   // Educations
   "educations.title": "Education",
@@ -165,8 +183,18 @@ const id: TranslationDict = {
   "col.period": "Periode",
   "col.name": "Nama",
   "col.file": "File",
+  "col.image": "Gambar Utama",
+  "col.fileType": "Tipe File",
   "col.description": "Deskripsi",
   "col.skills": "Skill",
+  "col.publicationType": "Tipe Publikasi",
+  "col.publisher": "Penerbit",
+  "col.journalName": "Nama Jurnal",
+  "col.doi": "DOI",
+  "col.citations": "Sitasi",
+  "col.authors": "Penulis",
+  "col.publishDate": "Tanggal Terbit",
+  "col.url": "URL",
 
   // Form fields (shared across entities)
   "form.title": "Judul",
@@ -207,6 +235,24 @@ const id: TranslationDict = {
   "form.contacts": "Kontak",
   "form.file_url": "URL File",
   "form.is_primary": "CV Utama",
+  "form.file_type": "Tipe File",
+  "form.file": "Unggah File",
+
+  // Publication form fields
+  "form.publication_type": "Tipe Publikasi",
+  "form.authors": "Penulis",
+  "form.publisher": "Penerbit",
+  "form.journal_name": "Nama Jurnal",
+  "form.volume": "Volume",
+  "form.issue": "Edisi",
+  "form.pages": "Halaman",
+  "form.doi": "DOI",
+  "form.url": "URL",
+  "form.pdf_url": "URL PDF",
+  "form.scholar_url": "URL Google Scholar",
+  "form.abstract": "Abstrak",
+  "form.publish_date": "Tanggal Terbit",
+  "form.citations": "Jumlah Sitasi",
 
   // Upload
   "upload.hint": "Klik atau seret file ke area ini untuk unggah",
@@ -214,6 +260,12 @@ const id: TranslationDict = {
     "Hanya mendukung unggahan gambar dengan ukuran maksimal 2MB.",
   "upload.tooLarge": "Ukuran file {name} melebihi 2MB.",
   "upload.invalidType": "{name} bukan file gambar.",
+  "upload.fileHint": "Klik atau seret file ke area ini untuk unggah",
+  "upload.fileSubHint":
+    "Mendukung PDF, Google Docs, dan Microsoft Word (doc/docx) maksimal 10MB.",
+  "upload.fileTooLarge": "Ukuran file {name} melebihi 10MB.",
+  "upload.fileInvalidType":
+    "{name} bukan file PDF/Google Docs/Microsoft Word.",
 
   // Options
   "option.project.personal": "Personal",
@@ -221,6 +273,14 @@ const id: TranslationDict = {
   "option.project.client": "Klien",
   "option.education.formal": "Formal",
   "option.education.nonformal": "Non-Formal",
+  "option.publication.JOURNAL": "Jurnal",
+  "option.publication.CONFERENCE": "Konferensi",
+  "option.publication.BOOK": "Buku",
+  "option.publication.PREPRINT": "Preprint",
+  "option.publication.OTHER": "Lainnya",
+  "option.file.NONE": "Tidak Ada",
+  "option.file.URL": "URL",
+  "option.file.UPLOAD": "Unggah",
   "option.role.fullstack": "Full Stack Developer",
   "option.role.frontend": "Frontend Developer",
   "option.role.backend": "Backend Developer",
@@ -271,6 +331,9 @@ const en: TranslationDict = {
   "common.openLink": "Open link",
   "common.primary": "Primary",
   "common.website": "Website",
+  "common.import": "Import",
+  "common.downloadTemplate": "Download Template",
+  "common.viewFile": "View File",
 
   // Validation & notification
   "validation.required": "{field} is required.",
@@ -290,6 +353,11 @@ const en: TranslationDict = {
   "notif.confirmDelete": "Are you sure you want to delete this {entity}?",
   "notif.confirmSave": "Are you sure you want to save?",
   "notif.confirmToggle": "Are you sure you want to {action} this {entity}?",
+  "notif.importSuccess": "{count} {entity} imported successfully",
+  "notif.importFailed": "Failed to import {entity}",
+  "notif.templateDownloaded": "{entity} template downloaded successfully",
+  "notif.templateFailed": "Failed to download {entity} template",
+  "notif.fileRequired": "File is required",
 
   // Menu
   "menu.dashboard": "Dashboard",
@@ -298,6 +366,7 @@ const en: TranslationDict = {
   "menu.projects": "Projects",
   "menu.certifications": "Certifications",
   "menu.educations": "Educations",
+  "menu.publications": "Publications",
   "menu.cv": "CV",
 
   // Header & footer
@@ -320,6 +389,7 @@ const en: TranslationDict = {
   "dashboard.stat.experiences": "Experiences",
   "dashboard.stat.certifications": "Certifications",
   "dashboard.stat.educations": "Educations",
+  "dashboard.stat.publications": "Publications",
   "dashboard.stat.cv": "CVs",
   "dashboard.chart.activity": "Project Activity (Last 6 Months)",
   "dashboard.chart.activityBar": "Projects Created",
@@ -350,6 +420,14 @@ const en: TranslationDict = {
   "certifications.empty":
     'No certifications yet. Click "Add Certification" to create one.',
   "certifications.detail": "Certification Detail",
+
+  // Publications
+  "publications.title": "Publication",
+  "publications.description": "Manage your publications, journals, and scholar",
+  "publications.add": "Add Publication",
+  "publications.empty":
+    'No publications yet. Click "Add Publication" to create one.',
+  "publications.detail": "Publication Detail",
 
   // Educations
   "educations.title": "Education",
@@ -389,8 +467,18 @@ const en: TranslationDict = {
   "col.period": "Period",
   "col.name": "Name",
   "col.file": "File",
+  "col.image": "Main Image",
+  "col.fileType": "File Type",
   "col.description": "Description",
   "col.skills": "Skills",
+  "col.publicationType": "Publication Type",
+  "col.publisher": "Publisher",
+  "col.journalName": "Journal Name",
+  "col.doi": "DOI",
+  "col.citations": "Citations",
+  "col.authors": "Authors",
+  "col.publishDate": "Publish Date",
+  "col.url": "URL",
 
   // Form fields (shared across entities)
   "form.title": "Title",
@@ -431,12 +519,35 @@ const en: TranslationDict = {
   "form.contacts": "Contacts",
   "form.file_url": "File URL",
   "form.is_primary": "Primary CV",
+  "form.file_type": "File Type",
+  "form.file": "Upload File",
+
+  // Publication form fields
+  "form.publication_type": "Publication Type",
+  "form.authors": "Authors",
+  "form.publisher": "Publisher",
+  "form.journal_name": "Journal Name",
+  "form.volume": "Volume",
+  "form.issue": "Issue",
+  "form.pages": "Pages",
+  "form.doi": "DOI",
+  "form.url": "URL",
+  "form.pdf_url": "PDF URL",
+  "form.scholar_url": "Google Scholar URL",
+  "form.abstract": "Abstract",
+  "form.publish_date": "Publish Date",
+  "form.citations": "Citation Count",
 
   // Upload
   "upload.hint": "Click or drag file to this area to upload",
   "upload.subHint": "Support for image uploads only, max size 2MB.",
   "upload.tooLarge": "File {name} exceeds 2MB.",
   "upload.invalidType": "{name} is not an image file.",
+  "upload.fileHint": "Click or drag file to this area to upload",
+  "upload.fileSubHint":
+    "Supports PDF, Google Docs, and Microsoft Word (doc/docx) up to 10MB.",
+  "upload.fileTooLarge": "File {name} exceeds 10MB.",
+  "upload.fileInvalidType": "{name} is not a PDF/Google Docs/Microsoft Word file.",
 
   // Options
   "option.project.personal": "Personal",
@@ -444,6 +555,14 @@ const en: TranslationDict = {
   "option.project.client": "Client",
   "option.education.formal": "Formal",
   "option.education.nonformal": "Non-Formal",
+  "option.publication.JOURNAL": "Journal",
+  "option.publication.CONFERENCE": "Conference",
+  "option.publication.BOOK": "Book",
+  "option.publication.PREPRINT": "Preprint",
+  "option.publication.OTHER": "Other",
+  "option.file.NONE": "None",
+  "option.file.URL": "URL",
+  "option.file.UPLOAD": "Upload",
   "option.role.fullstack": "Full Stack Developer",
   "option.role.frontend": "Frontend Developer",
   "option.role.backend": "Backend Developer",

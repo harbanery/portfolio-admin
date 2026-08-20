@@ -13,9 +13,11 @@ import {
   Space,
   Switch,
 } from "antd";
+import type { NamePath } from "antd/es/form/interface";
 import DatePicker from "antd/es/date-picker";
 import { InboxOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useLocale } from "@/components/locale/LocaleProvider";
+import { UploadFileLike } from "@/helpers/image";
 import {
   FormAdminProps,
   FormLayout,
@@ -26,20 +28,27 @@ import {
 /*  Icon cache – preload once, then render from cache without hooks     */
 /* ------------------------------------------------------------------ */
 
-const antdIconCache: Record<string, React.ComponentType<any> | null> = {};
+type IconComponent = React.ComponentType<{
+  style?: React.CSSProperties;
+  className?: string;
+}>;
+
+const antdIconCache: Record<string, IconComponent | null> = {};
 
 async function ensureIcon(iconName: string): Promise<void> {
   if (antdIconCache[iconName]) return;
   try {
-    const mod = await import("@ant-design/icons");
-    antdIconCache[iconName] =
-      (mod as any)[iconName] ?? null;
+    const mod = (await import("@ant-design/icons")) as unknown as Record<
+      string,
+      IconComponent | undefined
+    >;
+    antdIconCache[iconName] = mod[iconName] ?? null;
   } catch {
     antdIconCache[iconName] = null;
   }
 }
 
-function getCachedIcon(iconName: string): React.ComponentType<any> | null {
+function getCachedIcon(iconName: string): IconComponent | null {
   return antdIconCache[iconName] ?? null;
 }
 
@@ -55,18 +64,26 @@ function collectIconNames(layout: FormLayout[]): string[] {
   return Array.from(names);
 }
 
+/** Ambil storagePath dari file hasil upload antd (lokal atau response). */
+function getStoragePath(file: unknown): string | null {
+  if (!file || typeof file !== "object") return null;
+  const f = file as UploadFileLike;
+  return f.storagePath ?? f.response?.data?.storagePath ?? null;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Field render helper – returns JSX, NOT a component                  */
 /* ------------------------------------------------------------------ */
 
 interface RenderFieldParams {
   type?: string;
-  name?: any;
-  value?: any;
+  name?: NamePath;
+  value?: unknown;
   placeholder?: string;
   disabled?: boolean;
   icon?: string;
   select?: SelectProps;
+  accept?: string;
   uploadHint?: { hint: string; subHint: string };
   formInstance?: import("antd").FormInstance;
 }
@@ -80,6 +97,7 @@ function renderField(params: RenderFieldParams): ReactNode {
     disabled,
     icon,
     select,
+    accept,
     uploadHint,
     formInstance,
   } = params;
@@ -106,6 +124,8 @@ function renderField(params: RenderFieldParams): ReactNode {
   switch (type) {
     case "input":
       return <Input prefix={prefixNode} placeholder={tpl} disabled={disabled} />;
+    case "number":
+      return <Input type="number" prefix={prefixNode} placeholder={tpl} disabled={disabled} />;
     case "password":
       return <Input.Password prefix={prefixNode} placeholder={tpl} disabled={disabled} />;
     case "textarea":
@@ -130,11 +150,11 @@ function renderField(params: RenderFieldParams): ReactNode {
     case "upload":
       return (
         <Upload.Dragger
-          name={name}
+          name={typeof name === "string" ? name : undefined}
           disabled={disabled}
           multiple={false}
           maxCount={1}
-          accept="image/*"
+          accept={accept ?? "image/*"}
           listType="picture"
           action="/api/upload"
           beforeUpload={(file) => {
@@ -151,8 +171,7 @@ function renderField(params: RenderFieldParams): ReactNode {
             }
           }}
           onRemove={async (file) => {
-            const path =
-              (file as any).storagePath ?? file.response?.data?.storagePath;
+            const path = getStoragePath(file);
             if (path) {
               try {
                 await fetch(`/api/upload?path=${encodeURIComponent(path)}`, { method: "DELETE" });
@@ -173,10 +192,48 @@ function renderField(params: RenderFieldParams): ReactNode {
           )}
         </Upload.Dragger>
       );
+    case "file_upload":
+      return (
+        <Upload.Dragger
+          name={typeof name === "string" ? name : undefined}
+          disabled={disabled}
+          multiple={false}
+          maxCount={1}
+          accept={accept ?? ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
+          action="/api/upload"
+          beforeUpload={(file) => {
+            if (file.size > 10 * 1024 * 1024) return false;
+            return true;
+          }}
+          onChange={(info) => {
+            if (info.file.status === "done" && info.file.response?.success) {
+              const url = info.file.response.data.url;
+              const storagePath = info.file.response.data.storagePath;
+              formInstance?.setFieldValue(name, [
+                { uid: info.file.uid, name: info.file.name, status: "done", url, storagePath },
+              ]);
+            }
+          }}
+          onRemove={async (file) => {
+            const path = getStoragePath(file);
+            if (path) {
+              try {
+                await fetch(`/api/upload?path=${encodeURIComponent(path)}`, { method: "DELETE" });
+              } catch (e) {
+                console.error("Error deleting file:", e);
+              }
+            }
+          }}
+        >
+          <p className="ant-upload-drag-icon"><InboxOutlined /></p>
+          <p className="ant-upload-text">{uploadHint?.hint}</p>
+          <p className="ant-upload-hint">{uploadHint?.subHint}</p>
+        </Upload.Dragger>
+      );
     case "image_upload":
       return (
         <Upload
-          name={name}
+          name={typeof name === "string" ? name : undefined}
           disabled={disabled}
           multiple
           listType="picture-card"
@@ -187,8 +244,7 @@ function renderField(params: RenderFieldParams): ReactNode {
             return true;
           }}
           onRemove={async (file) => {
-            const path =
-              (file as any).storagePath ?? file.response?.data?.storagePath;
+            const path = getStoragePath(file);
             if (path) {
               try {
                 await fetch(`/api/upload?path=${encodeURIComponent(path)}`, { method: "DELETE" });
@@ -226,35 +282,29 @@ const FormAdmin = ({
   customComponent,
 }: FormAdminProps) => {
   const { t } = useLocale();
-  const [iconsReady, setIconsReady] = useState(false);
+  /* State hanya untuk memicu re-render setelah ikon selesai dimuat. */
+  const [, setIconsReady] = useState(false);
 
   const form = Form.useFormInstance();
 
-  /* Preload all icons needed by the layout so renderField can use the cache */
+  /* Preload all icons needed by the layout so renderField can use the cache.
+     Promise.all selalu async (termasuk untuk daftar kosong) sehingga
+     setState tidak pernah dipanggil sinkron dalam effect. */
   useEffect(() => {
     let cancelled = false;
     const iconNames = collectIconNames(layout);
-    if (iconNames.length === 0) {
-      setIconsReady(true);
-      return;
-    }
     Promise.all(iconNames.map(ensureIcon)).then(() => {
       if (!cancelled) setIconsReady(true);
     });
     return () => { cancelled = true; };
   }, [layout]);
 
-  /* Re-render after icons are ready */
-  useEffect(() => {
-    if (iconsReady) {
-      // Trigger re-render so cached icons appear in fields
-    }
-  }, [iconsReady]);
-
   const renderContactList = useCallback(
     (item: FormLayoutItem, fp: FormProps) => {
       const contactOptions: Array<{ label: string; value: string }> =
-        (optionList?.[item.name] as Array<{ label: string; value: string }>) ?? [];
+        (optionList?.[item.name] as unknown as Array<
+          { label: string; value: string }
+        >) ?? [];
       const f = fp.form;
 
       return (
@@ -453,7 +503,12 @@ const FormAdmin = ({
               }
 
               /* ---- upload fields ---- */
-              if (item.type === "image_upload" || item.type === "upload") {
+              if (
+                item.type === "image_upload" ||
+                item.type === "upload" ||
+                item.type === "file_upload"
+              ) {
+                const isFileUpload = item.type === "file_upload";
                 return (
                   <Form.Item
                     key={item.name}
@@ -470,10 +525,15 @@ const FormAdmin = ({
                       name: item.name,
                       placeholder: item.placeholder,
                       disabled: item.disabled,
+                      accept: item.accept,
                       select: { options: optionList?.[item.name] },
                       uploadHint: {
-                        hint: t("upload.hint"),
-                        subHint: t("upload.subHint"),
+                        hint: t(
+                          isFileUpload ? "upload.fileHint" : "upload.hint",
+                        ),
+                        subHint: t(
+                          isFileUpload ? "upload.fileSubHint" : "upload.subHint",
+                        ),
                       },
                     })}
                   </Form.Item>

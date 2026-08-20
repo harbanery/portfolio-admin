@@ -11,17 +11,22 @@ import {
   Tag,
   Typography,
   Space,
+  Upload,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { modalBodyProps } from "@/helpers/modal";
-import { getImageString } from "@/helpers/image";
+import { asAppError } from "@/helpers/error";
+import { getImageString, getImagesArray, type UploadFileLike } from "@/helpers/image";
 import { useLocale } from "@/components/locale/LocaleProvider";
 import { skillsOptions } from "@/helpers/skills";
+import { menuFileOrigin } from "@/helpers/menu";
 import { FormLayout } from "@/models/form";
+import * as XLSX from "xlsx";
 
 export type CertificationStatus = "ACTIVE" | "NONACTIVE";
+export type CertificationFileType = "NONE" | "URL" | "UPLOAD";
 
 interface CertificationItem {
   id: number;
@@ -31,10 +36,50 @@ interface CertificationItem {
   expiry_date?: string | null;
   credential_id?: string | null;
   credential_url?: string | null;
+  file_type: CertificationFileType;
+  file_url?: string | null;
+  file_storage_path?: string | null;
   image?: string | null;
   skills: string[];
   status: CertificationStatus;
 }
+
+/** Kolom template XLS untuk import/export certifications. */
+const XLS_COLUMNS = [
+  "title",
+  "issuer",
+  "issue_date",
+  "expiry_date",
+  "credential_id",
+  "credential_url",
+  "file_type",
+  "file_url",
+  "image",
+  "skills",
+];
+
+interface CertificationFormValues {
+  title: string;
+  issuer: string;
+  issue_date?: dayjs.Dayjs;
+  expiry_date?: dayjs.Dayjs;
+  credential_id?: string | null;
+  credential_url?: string | null;
+  file_type?: CertificationFileType;
+  file_url?: string;
+  file_upload?: UploadFileLike[];
+  image?: unknown;
+  skills?: string[];
+}
+
+const PlusIcon = loadAntdIcon("PlusOutlined");
+const EditIcon = loadAntdIcon("EditOutlined");
+const DeleteIcon = loadAntdIcon("DeleteOutlined");
+const LinkIcon = loadAntdIcon("LinkOutlined");
+const CheckIcon = loadAntdIcon("CheckOutlined");
+const StopIcon = loadAntdIcon("StopOutlined");
+const DownloadIcon = loadAntdIcon("DownloadOutlined");
+const UploadIcon = loadAntdIcon("UploadOutlined");
 
 const CertificationDecorator = ({
   formLayout,
@@ -42,24 +87,23 @@ const CertificationDecorator = ({
   formLayout: FormLayout[];
 }) => {
   const { t } = useLocale();
-  const PlusIcon = loadAntdIcon("PlusOutlined");
-  const EditIcon = loadAntdIcon("EditOutlined");
-  const DeleteIcon = loadAntdIcon("DeleteOutlined");
-  const LinkIcon = loadAntdIcon("LinkOutlined");
-  const CheckIcon = loadAntdIcon("CheckOutlined");
-  const StopIcon = loadAntdIcon("StopOutlined");
 
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<CertificationFormValues>();
   const { notification, modal } = App.useApp();
 
   const [loading, setLoading] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [items, setItems] = useState<CertificationItem[]>([]);
   const [editingItem, setEditingItem] = useState<CertificationItem | null>(null);
 
+  const fileTypeOptions = menuFileOrigin.map((f) => ({
+    label: t(`option.file.${f.value}`),
+    value: f.value,
+  }));
+
   const fetchCertifications = async () => {
-    setFetching(true);
     try {
       const response = await fetch("/api/certifications");
       const result = await response.json();
@@ -79,8 +123,21 @@ const CertificationDecorator = ({
     }
   };
 
-  const toPayload = async (values: Record<string, any>) => {
+  const toPayload = async (values: CertificationFormValues) => {
     const imageString = await getImageString(values.image);
+    const fileType = values.file_type ?? "NONE";
+
+    // Ambil URL file sesuai tipe: URL manual atau hasil upload Cloudinary.
+    let fileUrl: string | null = null;
+    let fileStoragePath: string | null = null;
+    if (fileType === "URL") {
+      fileUrl = values.file_url || null;
+    } else if (fileType === "UPLOAD" && Array.isArray(values.file_upload)) {
+      const uploaded = await getImagesArray(values.file_upload);
+      fileUrl = uploaded[0] ?? null;
+      fileStoragePath = values.file_upload[0]?.storagePath ?? null;
+    }
+
     return {
       title: values.title,
       issuer: values.issuer,
@@ -88,6 +145,9 @@ const CertificationDecorator = ({
       expiryDate: values.expiry_date?.toISOString() ?? null,
       credentialId: values.credential_id,
       credentialUrl: values.credential_url,
+      fileType,
+      fileUrl,
+      fileStoragePath,
       image: imageString || null,
       skills: values.skills || [],
     };
@@ -108,6 +168,20 @@ const CertificationDecorator = ({
       expiry_date: item.expiry_date ? dayjs(item.expiry_date) : undefined,
       credential_id: item.credential_id,
       credential_url: item.credential_url,
+      file_type: item.file_type ?? "NONE",
+      file_url:
+        item.file_type === "URL" ? (item.file_url ?? undefined) : undefined,
+      file_upload:
+        item.file_type === "UPLOAD" && item.file_url
+          ? [
+              {
+                uid: "-1",
+                name: item.file_url.split("/").pop() || "file",
+                status: "done",
+                url: item.file_url,
+              },
+            ]
+          : undefined,
       image: item.image
         ? [{ url: item.image, thumbUrl: item.image, status: "done" }]
         : undefined,
@@ -143,17 +217,18 @@ const CertificationDecorator = ({
       setIsModalOpen(false);
       form.resetFields();
       fetchCertifications();
-    } catch (error: any) {
+    } catch (error) {
+      const err = asAppError(error);
       notification.error({
         key: "save-error",
-        title: error?.errorFields
+        title: err.errorFields
           ? t("notif.validationError")
           : t("notif.error"),
-        ...(error?.errorFields
+        ...(err.errorFields
           ? {}
           : {
               description:
-                error?.message ||
+                err.message ||
                 t("notif.saveFailed", { entity: t("certifications.title") }),
             }),
         placement: "bottomRight",
@@ -179,12 +254,13 @@ const CertificationDecorator = ({
         }),
         placement: "bottomRight",
       });
-    } catch (error: any) {
+    } catch (error) {
+      const err = asAppError(error);
       notification.error({
         key: "delete-error",
         title: t("notif.error"),
         description:
-          error?.message ||
+          err.message ||
           t("notif.deleteFailed", { entity: t("certifications.title") }),
         placement: "bottomRight",
       });
@@ -216,16 +292,128 @@ const CertificationDecorator = ({
         }),
         placement: "bottomRight",
       });
-    } catch (error: any) {
+    } catch (error) {
+      const err = asAppError(error);
       notification.error({
         key: "toggle-status-error",
         title: t("notif.error"),
         description:
-          error?.message ||
+          err.message ||
           t("notif.toggleFailed", { entity: t("certifications.title") }),
         placement: "bottomRight",
       });
     }
+  };
+
+  /** Unduh template XLS untuk import massal certifications. */
+  const handleDownloadTemplate = () => {
+    try {
+      const worksheet = XLSX.utils.aoa_to_sheet([
+        XLS_COLUMNS,
+        [
+          "AWS Solutions Architect",
+          "Amazon Web Services",
+          "2024-01-15",
+          "2027-01-15",
+          "AWS-123456",
+          "https://aws.amazon.com/verification",
+          "URL",
+          "https://example.com/certificate.pdf",
+          "https://res.cloudinary.com/demo/image/upload/sample.png",
+          "aws,cloud",
+        ],
+      ]);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Certifications",
+      );
+      XLSX.writeFile(workbook, "certifications-template.xlsx");
+      notification.success({
+        key: "template-success",
+        title: t("notif.success"),
+        description: t("notif.templateDownloaded", {
+          entity: t("certifications.title"),
+        }),
+        placement: "bottomRight",
+      });
+    } catch (error) {
+      const err = asAppError(error);
+      notification.error({
+        key: "template-error",
+        title: t("notif.error"),
+        description:
+          err.message ||
+          t("notif.templateFailed", { entity: t("certifications.title") }),
+        placement: "bottomRight",
+      });
+    }
+  };
+
+  /** Import massal certifications dari file XLS/XLSX/CSV. */
+  const handleImport = async (file: File) => {
+    setImporting(true);
+    try {
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
+        defval: null,
+      });
+
+      if (!rows.length) throw new Error("File is empty");
+
+      const payload = rows.map((row) => ({
+        title: String(row.title ?? "").trim(),
+        issuer: String(row.issuer ?? "").trim(),
+        issueDate: row.issue_date ? new Date(String(row.issue_date)) : new Date(),
+        expiryDate: row.expiry_date ? new Date(String(row.expiry_date)) : null,
+        credentialId: row.credential_id ?? null,
+        credentialUrl: row.credential_url ?? null,
+        fileType: String(row.file_type ?? "NONE").toUpperCase(),
+        fileUrl: row.file_url ?? null,
+        image: row.image ?? null,
+        skills: row.skills
+          ? String(row.skills)
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : [],
+      }));
+
+      const response = await fetch("/api/certifications/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: payload }),
+      });
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error);
+
+      notification.success({
+        key: "import-success",
+        title: t("notif.success"),
+        description: t("notif.importSuccess", {
+          count: result.data?.count ?? payload.length,
+          entity: t("certifications.title"),
+        }),
+        placement: "bottomRight",
+      });
+      fetchCertifications();
+    } catch (error) {
+      const err = asAppError(error);
+      notification.error({
+        key: "import-error",
+        title: t("notif.error"),
+        description:
+          err.message ||
+          t("notif.importFailed", { entity: t("certifications.title") }),
+        placement: "bottomRight",
+      });
+    } finally {
+      setImporting(false);
+    }
+    return false; // cegah auto upload antd
   };
 
   const columns: ColumnsType<CertificationItem> = [
@@ -244,6 +432,16 @@ const CertificationDecorator = ({
               className="text-blue-500 text-xs flex items-center gap-1"
             >
               <LinkIcon /> {t("common.openLink")}
+            </a>
+          )}
+          {record.file_type !== "NONE" && record.file_url && (
+            <a
+              href={record.file_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 text-xs flex items-center gap-1"
+            >
+              <LinkIcon /> {t("common.viewFile")}
             </a>
           )}
         </Space>
@@ -268,6 +466,20 @@ const CertificationDecorator = ({
       render: (date: string | null) =>
         date ? dayjs(date).format("DD MMM YYYY") : t("common.noExpiry"),
       responsive: ["md"],
+    },
+    {
+      title: t("col.fileType"),
+      dataIndex: "file_type",
+      key: "file_type",
+      responsive: ["md"],
+      render: (ftype: CertificationFileType) =>
+        ftype && ftype !== "NONE" ? (
+          <Tag color={ftype === "URL" ? "blue" : "cyan"}>
+            {t(`option.file.${ftype}`)}
+          </Tag>
+        ) : (
+          <Tag>{t("option.file.NONE")}</Tag>
+        ),
     },
     {
       title: t("common.status"),
@@ -339,7 +551,9 @@ const CertificationDecorator = ({
   ];
 
   useEffect(() => {
-    fetchCertifications();
+    // Defer via microtask agar setState di dalam fetchCertifications tidak
+    // dipanggil sinkron dari effect (pola yang sama dengan admin/form).
+    void Promise.resolve().then(fetchCertifications);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -355,17 +569,36 @@ const CertificationDecorator = ({
           </p>
         </div>
 
-        <Button
-          style={{ fontWeight: 600 }}
-          icon={<PlusIcon />}
-          variant="solid"
-          color="geekblue"
-          iconPlacement="end"
-          size="large"
-          onClick={handleAdd}
-        >
-          {t("certifications.add")}
-        </Button>
+        <Space wrap>
+          <Button
+            icon={<DownloadIcon />}
+            onClick={handleDownloadTemplate}
+            loading={importing}
+          >
+            {t("common.downloadTemplate")}
+          </Button>
+          <Upload
+            accept=".xls,.xlsx,.csv"
+            maxCount={1}
+            showUploadList={false}
+            beforeUpload={(file) => handleImport(file)}
+          >
+            <Button icon={<UploadIcon />} loading={importing}>
+              {t("common.import")}
+            </Button>
+          </Upload>
+          <Button
+            style={{ fontWeight: 600 }}
+            icon={<PlusIcon />}
+            variant="solid"
+            color="geekblue"
+            iconPlacement="end"
+            size="large"
+            onClick={handleAdd}
+          >
+            {t("certifications.add")}
+          </Button>
+        </Space>
       </div>
 
       <Table
@@ -398,9 +631,12 @@ const CertificationDecorator = ({
         {...modalBodyProps()}
       >
         <FormAdmin
-          formProps={{ form }}
+          formProps={{ form, initialValues: { file_type: "NONE" } }}
           layout={formLayout}
-          optionList={{ skills: skillsOptions }}
+          optionList={{
+            skills: skillsOptions,
+            file_type: fileTypeOptions,
+          }}
         />
       </Modal>
     </section>

@@ -6,6 +6,7 @@ import { App, Button, Form, Modal, Card, Tag, Empty, Image } from "antd";
 import { useEffect, useState } from "react";
 import LoaderPage from "@/components/admin/loader";
 import { modalBodyProps } from "@/helpers/modal";
+import { asAppError } from "@/helpers/error";
 import { menuProjectType, menuRole } from "@/helpers/menu";
 import { skillsOptions } from "@/helpers/skills";
 import { getGithubRepoName } from "@/helpers";
@@ -59,6 +60,28 @@ interface ProjectItem {
   status: ProjectStatus;
 }
 
+interface ProjectFormValues {
+  title: string;
+  subtitle?: string | null;
+  project_type?: string;
+  company_name?: string | null;
+  client_name?: string | null;
+  role: string;
+  image?: unknown;
+  images?: unknown;
+  description?: string | null;
+  api_documentation?: string | null;
+  features?: string[];
+  highlights?: string[];
+  challenges?: string | null;
+  solutions?: string | null;
+  story?: string | null;
+  outcomes?: string[];
+  skills?: string[];
+  repo_links?: string[];
+  web_link?: string | null;
+}
+
 /** Wrapper div sortable (dnd-kit) dengan drag handle untuk kartu project. */
 const SortableItem: React.FC<{
   id: number;
@@ -85,7 +108,7 @@ const SortableItem: React.FC<{
       <Button
         type="text"
         size="small"
-        className="drag-handle absolute right-2 top-2 z-10 bg-white/70 dark:bg-black/40 rounded-full shadow-sm"
+        className="drag-handle absolute right-2 top-2 bg-white/70 dark:bg-black/40 rounded-full shadow-sm"
         icon={<HolderOutlined />}
         aria-label="Drag to reorder"
         {...attributes}
@@ -96,19 +119,18 @@ const SortableItem: React.FC<{
   );
 };
 
+const PlusIcon = loadAntdIcon("PlusOutlined");
+const GithubIcon = loadAntdIcon("GithubOutlined");
+const LinkIcon = loadAntdIcon("LinkOutlined");
+const DeleteIcon = loadAntdIcon("DeleteOutlined");
+const CheckIcon = loadAntdIcon("CheckOutlined");
+const StopIcon = loadAntdIcon("StopOutlined");
+
 const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   const { t } = useLocale();
-  const PlusIcon = loadAntdIcon("PlusOutlined");
-  const EditIcon = loadAntdIcon("EditOutlined");
-  const SaveIcon = loadAntdIcon("SaveOutlined");
-  const GithubIcon = loadAntdIcon("GithubOutlined");
-  const LinkIcon = loadAntdIcon("LinkOutlined");
-  const DeleteIcon = loadAntdIcon("DeleteOutlined");
-  const CheckIcon = loadAntdIcon("CheckOutlined");
-  const StopIcon = loadAntdIcon("StopOutlined");
 
-  const [form] = Form.useForm();
-  const [detailForm] = Form.useForm();
+  const [form] = Form.useForm<ProjectFormValues>();
+  const [detailForm] = Form.useForm<ProjectFormValues>();
   const dataDetail = Form.useWatch([], detailForm);
   const { notification, modal } = App.useApp();
 
@@ -121,10 +143,8 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   const [companyOptions, setCompanyOptions] = useState<
     Array<{ label: string; value: string }>
   >([]);
-  const [isEditMode, setIsEditMode] = useState(false);
 
   const fetchProjects = async () => {
-    setFetching(true);
     try {
       const response = await fetch("/api/projects");
       const result = await response.json();
@@ -211,12 +231,13 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       });
       const result = await response.json();
       if (!result.success) throw new Error(result.error);
-    } catch (error: any) {
+    } catch (error) {
+      const err = asAppError(error);
       notification.error({
         key: "reorder-error",
         title: t("notif.error"),
         description:
-          error?.message ||
+          err.message ||
           t("notif.reorderFailed", { entity: t("projects.title") }),
         placement: "bottomRight",
       });
@@ -224,14 +245,15 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     }
   };
 
-  const toPayload = async (values: Record<string, any>) => {
+  const toPayload = async (values: ProjectFormValues) => {
     const imageString = await getImageString(values.image);
     const imagesArray = await getImagesArray(values.images);
     return {
       title: values.title,
       subtitle: values.subtitle,
       projectType: values.project_type,
-      companyName: values.project_type === "internal" ? values.company_name : null,
+      companyName:
+        values.project_type === "internal" ? values.company_name : null,
       clientName: values.project_type === "client" ? values.client_name : null,
       role: values.role,
       image: imageString,
@@ -273,17 +295,16 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       setIsModalOpen(false);
       form.resetFields();
       fetchProjects();
-    } catch (error: any) {
+    } catch (error) {
+      const err = asAppError(error);
       notification.error({
         key: "save-error",
-        title: error?.errorFields
-          ? t("notif.validationError")
-          : t("notif.error"),
-        ...(error?.errorFields
+        title: err.errorFields ? t("notif.validationError") : t("notif.error"),
+        ...(err.errorFields
           ? {}
           : {
               description:
-                error?.message ||
+                err.message ||
                 t("notif.saveFailed", { entity: t("projects.title") }),
             }),
         placement: "bottomRight",
@@ -310,12 +331,13 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         description: t("notif.deleteSuccess", { entity: t("projects.title") }),
         placement: "bottomRight",
       });
-    } catch (error: any) {
+    } catch (error) {
+      const err = asAppError(error);
       notification.error({
         key: "delete-error",
         title: t("notif.error"),
         description:
-          error?.message ||
+          err.message ||
           t("notif.deleteFailed", { entity: t("projects.title") }),
         placement: "bottomRight",
       });
@@ -347,12 +369,13 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         }),
         placement: "bottomRight",
       });
-    } catch (error: any) {
+    } catch (error) {
+      const err = asAppError(error);
       notification.error({
         key: "toggle-status-error",
         title: t("notif.error"),
         description:
-          error?.message ||
+          err.message ||
           t("notif.toggleFailed", { entity: t("projects.title") }),
         placement: "bottomRight",
       });
@@ -425,21 +448,12 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     setSelectedItem(item);
     setDetailFields(item);
     setIsDetailModalOpen(true);
-    setIsEditMode(false);
   };
 
   const handleCloseDetail = () => {
     setIsDetailModalOpen(false);
     setSelectedItem(null);
-    setIsEditMode(false);
     detailForm.resetFields();
-  };
-
-  const handleEditToggle = () => {
-    if (isEditMode && selectedItem) {
-      setDetailFields(selectedItem);
-    }
-    setIsEditMode(!isEditMode);
   };
 
   const handleSaveEdit = async () => {
@@ -462,19 +476,18 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         placement: "bottomRight",
       });
 
-      setIsEditMode(false);
       fetchProjects();
-    } catch (error: any) {
+      handleCloseDetail();
+    } catch (error) {
+      const err = asAppError(error);
       notification.error({
         key: "edit-error",
-        title: error?.errorFields
-          ? t("notif.validationError")
-          : t("notif.error"),
-        ...(error?.errorFields
+        title: err.errorFields ? t("notif.validationError") : t("notif.error"),
+        ...(err.errorFields
           ? {}
           : {
               description:
-                error?.message ||
+                err.message ||
                 t("notif.saveFailed", { entity: t("projects.title") }),
             }),
         placement: "bottomRight",
@@ -485,8 +498,10 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   };
 
   useEffect(() => {
-    fetchProjects();
-    fetchCompanyOptions();
+    // Defer via microtask agar setState di dalam fetch tidak dipanggil
+    // sinkron dari effect (pola yang sama dengan admin/form).
+    void Promise.resolve().then(fetchProjects);
+    void Promise.resolve().then(fetchCompanyOptions);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -601,14 +616,17 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                             <h3 className="font-semibold text-lg m-0 truncate">
                               {item.title}
                             </h3>
-                            <p className="text-sm text-gray-500 m-0">
-                              {getRoleLabel(item.role)}
-                            </p>
-                            {(item.company_name || item.client_name) && (
-                              <p className="text-xs text-gray-400 dark:text-gray-500 m-0 truncate">
-                                {item.company_name || item.client_name}
-                              </p>
-                            )}
+                            <div className="flex items-center text-sm text-gray-500 truncate">
+                              <p className="m-0">{getRoleLabel(item.role)}</p>
+                              {(item.company_name || item.client_name) && (
+                                <>
+                                  <span className="px-2">-</span>
+                                  <p className="m-0">
+                                    {item.company_name || item.client_name}
+                                  </p>
+                                </>
+                              )}
+                            </div>
                           </div>
                           <div>
                             <Tag
@@ -621,7 +639,7 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                           </div>
                         </div>
 
-                        {item.image && (
+                        {item.image ? (
                           <div onClick={(e) => e.stopPropagation()}>
                             <Image
                               preview={{
@@ -631,6 +649,8 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                               alt={item.title}
                             />
                           </div>
+                        ) : (
+                          <Empty />
                         )}
 
                         <div className="flex flex-wrap gap-y-1">
@@ -696,61 +716,18 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       </Modal>
 
       <Modal
-        title={
-          <div className="flex justify-between items-center pr-8">
-            <span>{t("projects.detail")}</span>
-            <div className="flex gap-2">
-              {isEditMode && (
-                <Button
-                  variant="filled"
-                  color="default"
-                  size="small"
-                  onClick={handleEditToggle}
-                >
-                  {t("common.cancel")}
-                </Button>
-              )}
-              <Button
-                style={{ fontWeight: 600 }}
-                icon={isEditMode ? <SaveIcon /> : <EditIcon />}
-                variant="solid"
-                color={isEditMode ? "volcano" : "geekblue"}
-                iconPlacement="end"
-                size="small"
-                onClick={
-                  isEditMode
-                    ? () =>
-                        modal.confirm({
-                          title: t("notif.confirmSave"),
-                          okText: t("common.yes"),
-                          cancelText: t("common.no"),
-                          okButtonProps: {
-                            style: { fontWeight: 600 },
-                            variant: "solid",
-                            color: "primary",
-                          },
-                          cancelButtonProps: {
-                            variant: "filled",
-                            color: "default",
-                          },
-                          onOk: handleSaveEdit,
-                        })
-                    : handleEditToggle
-                }
-              >
-                {isEditMode ? t("common.save") : t("common.edit")}
-              </Button>
-            </div>
-          </div>
-        }
+        title={t("projects.detail")}
         open={isDetailModalOpen}
+        onOk={handleSaveEdit}
         onCancel={handleCloseDetail}
-        footer={null}
+        okText={t("common.save")}
+        cancelText={t("common.cancel")}
+        confirmLoading={loading}
         width={700}
         {...modalBodyProps()}
       >
         <FormAdmin
-          formProps={{ form: detailForm, disabled: !isEditMode }}
+          formProps={{ form: detailForm }}
           layout={formLayout}
           optionList={options}
           formValue={dataDetail}

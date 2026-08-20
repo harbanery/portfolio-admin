@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Drawer, Grid, Layout, Menu, type MenuProps } from "antd";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { menuAdminConfig } from "@/helpers/menu";
 import { loadAntdIcon } from "@/components/custom/icon";
 import { useLocale } from "@/components/locale/LocaleProvider";
@@ -29,9 +29,13 @@ const SiderLayout: React.FC<SiderLayoutProps> = ({
   const isMobile = !screens.md;
 
   const [collapsed, setCollapsed] = useState(true);
-  const [selectedKey, setSelectedKey] = useState<string[]>([]);
 
   const filteredMenu = menuAdminConfig?.filter((item) => item.active);
+
+  const selectedKey = useMemo(() => {
+    const key = filteredMenu.find((item) => pathname === item.link)?.key;
+    return key ? [key] : [];
+  }, [pathname, filteredMenu]);
 
   const menuItems: MenuItem[] = filteredMenu?.map((item) => {
     const Icon = loadAntdIcon(item.icon);
@@ -47,16 +51,9 @@ const SiderLayout: React.FC<SiderLayoutProps> = ({
   const toggleMenu = ({ key }: { key: string }) => {
     const linkTarget = filteredMenu.find((item) => item.key === key)?.link;
     if (!linkTarget) return;
-    setSelectedKey([key]);
     router.replace(linkTarget);
     onMobileClose();
   };
-
-  useEffect(() => {
-    const key = filteredMenu.find((item) => pathname === item.link)?.key;
-    setSelectedKey(key ? [key] : []);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
 
   // Mobile: drawer menu dikontrol dari layout induk.
   if (isMobile) {

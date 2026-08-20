@@ -2,89 +2,95 @@
 
 import FormAdmin from "@/components/admin/form";
 import { loadAntdIcon } from "@/components/custom/icon";
-import {
-  App,
-  Button,
-  Form,
-  Modal,
-  Card,
-  Tag,
-  Empty,
-  Typography,
-} from "antd";
+import { App, Button, Form, Modal, Card, Tag, Empty, Typography } from "antd";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import LoaderPage from "@/components/admin/loader";
-import { useLocale } from "@/components/locale/LocaleProvider";
 import { modalBodyProps } from "@/helpers/modal";
 import { asAppError } from "@/helpers/error";
+import { menuPublicationType } from "@/helpers/menu";
 import { skillsOptions } from "@/helpers/skills";
+import { useLocale } from "@/components/locale/LocaleProvider";
 import { FormLayout } from "@/models/form";
 
-export type EducationStatus = "ACTIVE" | "NONACTIVE";
-export type EducationType = "FORMAL" | "NONFORMAL";
+export type PublicationStatus = "ACTIVE" | "NONACTIVE";
+export type PublicationType = "JOURNAL" | "CONFERENCE" | "BOOK" | "PREPRINT" | "OTHER";
 
-interface EducationItem {
+interface PublicationItem {
   id: number;
-  education_type: EducationType;
-  school: string;
-  degree?: string | null;
-  field: string;
-  start_date: string;
-  end_date?: string | null;
-  grade?: string | null;
-  description?: string | null;
-  courses: string[];
-  status: EducationStatus;
+  title: string;
+  authors: string[];
+  publication_type: PublicationType;
+  publisher?: string | null;
+  journal_name?: string | null;
+  volume?: string | null;
+  issue?: string | null;
+  pages?: string | null;
+  doi?: string | null;
+  url?: string | null;
+  pdf_url?: string | null;
+  scholar_url?: string | null;
+  abstract?: string | null;
+  publish_date: string;
+  citations: number;
+  skills: string[];
+  status: PublicationStatus;
 }
 
-interface EducationFormValues {
-  education_type?: EducationType;
-  school: string;
-  degree?: string | null;
-  field: string;
-  grade?: string | null;
-  description?: string | null;
-  courses?: string[];
-  period?: Array<dayjs.Dayjs | undefined>;
+interface PublicationFormValues {
+  title: string;
+  authors?: string[];
+  publication_type?: PublicationType;
+  publisher?: string | null;
+  journal_name?: string | null;
+  volume?: string | null;
+  issue?: string | null;
+  pages?: string | null;
+  doi?: string | null;
+  url?: string | null;
+  pdf_url?: string | null;
+  scholar_url?: string | null;
+  abstract?: string | null;
+  publish_date?: dayjs.Dayjs;
+  citations?: string | number;
+  skills?: string[];
 }
 
 const PlusIcon = loadAntdIcon("PlusOutlined");
 const DeleteIcon = loadAntdIcon("DeleteOutlined");
 const CheckIcon = loadAntdIcon("CheckOutlined");
 const StopIcon = loadAntdIcon("StopOutlined");
+const LinkIcon = loadAntdIcon("LinkOutlined");
 
-const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
+const PublicationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   const { t } = useLocale();
 
-  const [form] = Form.useForm<EducationFormValues>();
+  const [form] = Form.useForm<PublicationFormValues>();
   const { notification, modal } = App.useApp();
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [items, setItems] = useState<EducationItem[]>([]);
-  const [editingItem, setEditingItem] = useState<EducationItem | null>(null);
+  const [items, setItems] = useState<PublicationItem[]>([]);
+  const [editingItem, setEditingItem] = useState<PublicationItem | null>(null);
 
-  const educationTypeOptions = [
-    { label: t("option.education.formal"), value: "FORMAL" },
-    { label: t("option.education.nonformal"), value: "NONFORMAL" },
-  ];
+  const publicationTypeOptions = menuPublicationType.map((p) => ({
+    label: t(`option.publication.${p.value}`),
+    value: p.value,
+  }));
 
-  const educationTypeLabel = (type: EducationType) =>
-    type === "NONFORMAL"
-      ? t("option.education.nonformal")
-      : t("option.education.formal");
+  const publicationTypeLabel = (type: PublicationType) =>
+    t(`option.publication.${type}`);
 
-  const fetchEducations = async () => {
+  const fetchPublications = async () => {
     try {
-      const response = await fetch("/api/educations");
+      const response = await fetch("/api/publications");
       const result = await response.json();
       if (result.success && result.data) {
-        setItems(result.data as EducationItem[]);
+        setItems(result.data as PublicationItem[]);
       }
     } catch (error) {
-      console.error("Error fetching educations:", error);
+      console.error("Error fetching publications:", error);
       notification.error({
         key: "fetch-error",
         title: t("notif.error"),
@@ -96,21 +102,24 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     }
   };
 
-  const toPayload = (values: EducationFormValues) => {
-    const [start, end] = values.period || [];
-    const isNonFormal = values.education_type === "NONFORMAL";
-    return {
-      educationType: values.education_type ?? "FORMAL",
-      school: values.school,
-      degree: isNonFormal ? null : values.degree || null,
-      field: values.field,
-      startDate: start?.toISOString(),
-      endDate: end?.toISOString() ?? null,
-      grade: values.grade,
-      description: values.description,
-      courses: values.courses || [],
-    };
-  };
+  const toPayload = (values: PublicationFormValues) => ({
+    title: values.title,
+    authors: values.authors || [],
+    publicationType: values.publication_type ?? "JOURNAL",
+    publisher: values.publisher,
+    journalName: values.journal_name,
+    volume: values.volume,
+    issue: values.issue,
+    pages: values.pages,
+    doi: values.doi,
+    url: values.url,
+    pdfUrl: values.pdf_url,
+    scholarUrl: values.scholar_url,
+    abstract: values.abstract,
+    publishDate: values.publish_date?.toISOString(),
+    citations: values.citations ? Number(values.citations) : 0,
+    skills: values.skills || [],
+  });
 
   const handleAdd = () => {
     setEditingItem(null);
@@ -118,20 +127,25 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     setIsModalOpen(true);
   };
 
-  const handleEdit = (item: EducationItem) => {
+  const handleEdit = (item: PublicationItem) => {
     setEditingItem(item);
     form.setFieldsValue({
-      education_type: item.education_type,
-      school: item.school,
-      degree: item.degree,
-      field: item.field,
-      grade: item.grade,
-      description: item.description,
-      courses: item.courses,
-      period: [
-        item.start_date ? dayjs(item.start_date) : undefined,
-        item.end_date ? dayjs(item.end_date) : undefined,
-      ].filter(Boolean),
+      title: item.title,
+      authors: item.authors,
+      publication_type: item.publication_type,
+      publisher: item.publisher,
+      journal_name: item.journal_name,
+      volume: item.volume,
+      issue: item.issue,
+      pages: item.pages,
+      doi: item.doi,
+      url: item.url,
+      pdf_url: item.pdf_url,
+      scholar_url: item.scholar_url,
+      abstract: item.abstract,
+      publish_date: item.publish_date ? dayjs(item.publish_date) : undefined,
+      citations: item.citations,
+      skills: item.skills,
     });
     setIsModalOpen(true);
   };
@@ -142,7 +156,9 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       const values = await form.validateFields();
       const payload = toPayload(values);
       const response = await fetch(
-        editingItem ? `/api/educations/${editingItem.id}` : "/api/educations",
+        editingItem
+          ? `/api/publications/${editingItem.id}`
+          : "/api/publications",
         {
           method: editingItem ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
@@ -155,12 +171,14 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       notification.success({
         key: "save-success",
         title: t("notif.success"),
-        description: t("notif.saveSuccess", { entity: t("educations.title") }),
+        description: t("notif.saveSuccess", {
+          entity: t("publications.title"),
+        }),
         placement: "bottomRight",
       });
       setIsModalOpen(false);
       form.resetFields();
-      fetchEducations();
+      fetchPublications();
     } catch (error) {
       const err = asAppError(error);
       notification.error({
@@ -173,7 +191,7 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
           : {
               description:
                 err.message ||
-                t("notif.saveFailed", { entity: t("educations.title") }),
+                t("notif.saveFailed", { entity: t("publications.title") }),
             }),
         placement: "bottomRight",
       });
@@ -184,16 +202,18 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
 
   const handleDelete = async (id: number) => {
     try {
-      const response = await fetch(`/api/educations/${id}`, {
+      const response = await fetch(`/api/publications/${id}`, {
         method: "DELETE",
       });
       const result = await response.json();
       if (!result.success) throw new Error(result.error);
-      fetchEducations();
+      fetchPublications();
       notification.success({
         key: "delete-success",
         title: t("notif.success"),
-        description: t("notif.deleteSuccess", { entity: t("educations.title") }),
+        description: t("notif.deleteSuccess", {
+          entity: t("publications.title"),
+        }),
         placement: "bottomRight",
       });
     } catch (error) {
@@ -203,7 +223,7 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         title: t("notif.error"),
         description:
           err.message ||
-          t("notif.deleteFailed", { entity: t("educations.title") }),
+          t("notif.deleteFailed", { entity: t("publications.title") }),
         placement: "bottomRight",
       });
     }
@@ -211,24 +231,24 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
 
   const handleToggleStatus = async (
     id: number,
-    currentStatus: EducationStatus,
+    currentStatus: PublicationStatus,
   ) => {
-    const newStatus: EducationStatus =
+    const newStatus: PublicationStatus =
       currentStatus === "ACTIVE" ? "NONACTIVE" : "ACTIVE";
     try {
-      const response = await fetch(`/api/educations/${id}`, {
+      const response = await fetch(`/api/publications/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
       const result = await response.json();
       if (!result.success) throw new Error(result.error);
-      fetchEducations();
+      fetchPublications();
       notification.success({
         key: "toggle-status-success",
         title: t("notif.success"),
         description: t("notif.toggleSuccess", {
-          entity: t("educations.title"),
+          entity: t("publications.title"),
           status:
             newStatus === "ACTIVE" ? t("common.active") : t("common.inactive"),
         }),
@@ -241,22 +261,16 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         title: t("notif.error"),
         description:
           err.message ||
-          t("notif.toggleFailed", { entity: t("educations.title") }),
+          t("notif.toggleFailed", { entity: t("publications.title") }),
         placement: "bottomRight",
       });
     }
   };
 
-  const formatPeriod = (item: EducationItem) => {
-    const start = dayjs(item.start_date).format("MMM YYYY");
-    const end = item.end_date ? dayjs(item.end_date).format("MMM YYYY") : "-";
-    return `${start} - ${end}`;
-  };
-
   useEffect(() => {
-    // Defer via microtask agar setState di dalam fetchEducations tidak
+    // Defer via microtask agar setState di dalam fetchPublications tidak
     // dipanggil sinkron dari effect (pola yang sama dengan admin/form).
-    void Promise.resolve().then(fetchEducations);
+    void Promise.resolve().then(fetchPublications);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -267,10 +281,10 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       <div className="flex flex-wrap gap-4 justify-between items-center">
         <div className="flex flex-col gap-2 w-full sm:max-w-[50%]">
           <h1 className="font-semibold text-2xl sm:text-3xl m-0">
-            {t("educations.title")}
+            {t("publications.title")}
           </h1>
           <p className="font-light text-sm leading-tight">
-            {t("educations.description")}
+            {t("publications.description")}
           </p>
         </div>
 
@@ -283,13 +297,13 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
           size="large"
           onClick={handleAdd}
         >
-          {t("educations.add")}
+          {t("publications.add")}
         </Button>
       </div>
 
       <div className="flex flex-col gap-4">
         {items.length === 0 ? (
-          <Empty description={t("educations.empty")} />
+          <Empty description={t("publications.empty")} />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {items.map((item) => (
@@ -312,7 +326,7 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                             item.status === "ACTIVE"
                               ? t("common.deactivate")
                               : t("common.activate"),
-                          entity: t("educations.title"),
+                          entity: t("publications.title"),
                         }),
                         okText: t("common.yes"),
                         cancelText: t("common.no"),
@@ -333,7 +347,7 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                       e.stopPropagation();
                       modal.confirm({
                         title: t("notif.confirmDelete", {
-                          entity: t("educations.title"),
+                          entity: t("publications.title"),
                         }),
                         okText: t("common.yes"),
                         cancelText: t("common.no"),
@@ -348,24 +362,18 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                 <div className="flex flex-col gap-3">
                   <div className="flex justify-between items-start gap-2">
                     <div className="min-w-0">
-                      <h3 className="font-semibold text-lg m-0 truncate">
-                        {item.school}
+                      <h3 className="font-semibold text-lg m-0 line-clamp-2">
+                        {item.title}
                       </h3>
-                      <p className="text-sm text-gray-500 m-0">
-                        {item.degree
-                          ? `${item.degree} - ${item.field}`
-                          : item.field}
-                      </p>
+                      {item.journal_name && (
+                        <p className="text-sm text-gray-500 m-0 truncate">
+                          {item.journal_name}
+                        </p>
+                      )}
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <Tag
-                        color={
-                          item.education_type === "FORMAL"
-                            ? "geekblue"
-                            : "purple"
-                        }
-                      >
-                        {educationTypeLabel(item.education_type)}
+                      <Tag color="geekblue">
+                        {publicationTypeLabel(item.publication_type)}
                       </Tag>
                       <Tag color={item.status === "ACTIVE" ? "green" : "red"}>
                         {item.status === "ACTIVE"
@@ -376,29 +384,69 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                   </div>
 
                   <Typography.Text type="secondary">
-                    {formatPeriod(item)}
+                    {dayjs(item.publish_date).format("MMM YYYY")}
+                    {item.publisher ? ` - ${item.publisher}` : ""}
                   </Typography.Text>
 
-                  {item.grade && (
-                    <Typography.Text>
-                      {t("form.grade")}: {item.grade}
+                  {item.authors && item.authors.length > 0 && (
+                    <Typography.Text className="text-sm">
+                      {item.authors.join(", ")}
                     </Typography.Text>
                   )}
 
-                  {item.description && (
-                    <p
-                      className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 text-justify m-0"
-                      dangerouslySetInnerHTML={{ __html: item.description }}
-                    />
+                  {item.abstract && (
+                    <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 text-justify m-0">
+                      {item.abstract}
+                    </p>
                   )}
 
-                  {item.courses && item.courses.length > 0 && (
-                    <div className="flex flex-wrap gap-y-1">
-                      {item.courses.map((course) => (
-                        <Tag key={course}>{course}</Tag>
-                      ))}
-                    </div>
-                  )}
+                  <div className="flex flex-wrap gap-y-1 items-center">
+                    {item.doi && <Tag color="blue">DOI: {item.doi}</Tag>}
+                    {item.citations > 0 && (
+                      <Tag color="orange">
+                        {t("col.citations")}: {item.citations}
+                      </Tag>
+                    )}
+                    {item.skills?.map((skill) => (
+                      <Tag key={skill}>{skill}</Tag>
+                    ))}
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    {item.url && (
+                      <a
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 text-sm flex items-center gap-1 hover:underline truncate"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <LinkIcon /> {t("col.url")}
+                      </a>
+                    )}
+                    {item.pdf_url && (
+                      <a
+                        href={item.pdf_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 text-sm flex items-center gap-1 hover:underline truncate"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <LinkIcon /> PDF
+                      </a>
+                    )}
+                    {item.scholar_url && (
+                      <a
+                        href={item.scholar_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 text-sm flex items-center gap-1 hover:underline truncate"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <LinkIcon /> Google Scholar
+                      </a>
+                    )}
+                  </div>
                 </div>
               </Card>
             ))}
@@ -408,7 +456,7 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
 
       <Modal
         title={
-          editingItem ? t("educations.detail") : t("educations.add")
+          editingItem ? t("publications.detail") : t("publications.add")
         }
         open={isModalOpen}
         onOk={handleSave}
@@ -426,12 +474,12 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         <FormAdmin
           formProps={{
             form,
-            initialValues: { education_type: "FORMAL" },
+            initialValues: { publication_type: "JOURNAL", citations: 0 },
           }}
           layout={formLayout}
           optionList={{
-            education_type: educationTypeOptions,
-            courses: skillsOptions,
+            publication_type: publicationTypeOptions,
+            skills: skillsOptions,
           }}
         />
       </Modal>
@@ -439,4 +487,4 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   );
 };
 
-export default EducationDecorator;
+export default PublicationDecorator;
