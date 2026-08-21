@@ -66,12 +66,6 @@ export const menuPublicationType = [
   { label: "Other", value: "OTHER" },
 ];
 
-export const menuFileOrigin = [
-  { label: "None", value: "NONE" },
-  { label: "URL", value: "URL" },
-  { label: "Upload", value: "UPLOAD" },
-];
-
 export const menuContactType = [
   { label: "Email", value: "email" },
   { label: "Phone", value: "phone" },

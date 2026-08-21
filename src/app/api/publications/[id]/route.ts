@@ -33,6 +33,13 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
+    const publishDate = body.publishDate ? new Date(body.publishDate) : null;
+    if (!publishDate || Number.isNaN(publishDate.getTime())) {
+      return NextResponse.json(
+        { success: false, error: "Invalid publishDate" },
+        { status: 400 },
+      );
+    }
     const publication = await prisma.publication.update({
       where: { id: Number(id) },
       data: {
@@ -49,7 +56,7 @@ export async function PUT(
         pdf_url: body.pdfUrl,
         scholar_url: body.scholarUrl,
         abstract: body.abstract,
-        publish_date: new Date(body.publishDate),
+        publish_date: publishDate,
         citations: body.citations ?? 0,
         skills: body.skills || [],
       },

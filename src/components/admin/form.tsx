@@ -263,6 +263,8 @@ function renderField(params: RenderFieldParams): ReactNode {
       return <Editor placeholder={tpl} disabled={disabled} />;
     case "date":
       return <DatePicker disabled={disabled} style={{ width: "100%" }} placeholder={tpl} />;
+    case "month":
+      return <DatePicker picker="month" disabled={disabled} style={{ width: "100%" }} placeholder={tpl} />;
     case "date_range":
       return <DatePicker.RangePicker disabled={disabled} style={{ width: "100%" }} />;
     default:
@@ -397,6 +399,8 @@ const FormAdmin = ({
       <Form.Item
         name={item.name}
         label={item.label ?? t(`form.${item.name}`)}
+        /* Switch menggunakan prop `checked`, bukan `value`. */
+        valuePropName={item.type === "switch" ? "checked" : undefined}
         rules={
           item.required
             ? [

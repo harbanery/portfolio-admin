@@ -12,10 +12,17 @@ import { skillsOptions } from "@/helpers/skills";
 import { menuContactType } from "@/helpers/menu";
 import { FormLayout } from "@/models/form";
 
+const AVAILABILITY_OPTIONS = [
+  "AVAILABLE",
+  "ONLY_FREELANCE",
+  "NOT_AVAILABLE",
+] as const;
+
 interface PersonalItem {
   id: number;
   name: string;
   about?: string | null;
+  availability?: string;
   skills: string[];
   contacts?: Array<{ type: string; value: string }> | null;
   PersonalImage: Array<{ id: number; url: string }>;
@@ -24,6 +31,7 @@ interface PersonalItem {
 interface PersonalFormValues {
   name: string;
   about?: string | null;
+  availability?: string;
   skills?: string[];
   contacts?: Array<{ type: string; value: string }>;
   images?: unknown;
@@ -39,10 +47,13 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
-  const [existing, setExisting] = useState<PersonalItem | null>(null);
 
   const options = {
     skills: skillsOptions,
+    availability: AVAILABILITY_OPTIONS.map((v) => ({
+      label: t(`option.availability.${v}`),
+      value: v,
+    })),
     contacts: menuContactType.map((c) => ({
       label: t(`option.contact.${c.value}`),
       value: c.value,
@@ -55,10 +66,10 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       const result = await response.json();
       if (result.success && result.data) {
         const personal = result.data as PersonalItem;
-        setExisting(personal);
         form.setFieldsValue({
           name: personal.name,
           about: personal.about,
+          availability: personal.availability ?? "AVAILABLE",
           skills: personal.skills,
           contacts: personal.contacts ?? undefined,
           images: personal.PersonalImage?.map((img) => ({
@@ -99,6 +110,7 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
             body: JSON.stringify({
               name: values.name,
               about: values.about,
+              availability: values.availability || "AVAILABLE",
               skills: values.skills || [],
               contacts: values.contacts || null,
               imageUrls: imagesArray,
@@ -173,7 +185,11 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       </div>
 
       <Card variant="borderless" className="shadow-sm">
-        <FormAdmin formProps={{ form }} layout={formLayout} optionList={options} />
+        <FormAdmin
+          formProps={{ form, initialValues: { availability: "AVAILABLE" } }}
+          layout={formLayout}
+          optionList={options}
+        />
       </Card>
     </section>
   );

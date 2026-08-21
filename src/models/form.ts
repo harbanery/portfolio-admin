@@ -41,8 +41,8 @@ export type FormLayoutItem = {
    */
   hiddenWhen?: {
     field: string;
-    equals?: string;
-    notEquals?: string;
+    equals?: string | boolean | number;
+    notEquals?: string | boolean | number;
   };
 };
 

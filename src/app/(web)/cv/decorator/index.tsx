@@ -19,7 +19,6 @@ import LoaderPage from "@/components/admin/loader";
 import { modalBodyProps } from "@/helpers/modal";
 import { asAppError } from "@/helpers/error";
 import { getImagesArray, type UploadFileLike } from "@/helpers/image";
-import { menuFileOrigin } from "@/helpers/menu";
 import { useLocale } from "@/components/locale/LocaleProvider";
 import { FormLayout } from "@/models/form";
 
@@ -40,8 +39,6 @@ interface CvItem {
 
 interface CvFormValues {
   name: string;
-  file_type?: CvFileType;
-  file_url?: string;
   file_upload?: UploadFileLike[];
   description?: string | null;
   is_primary?: boolean;
@@ -53,6 +50,7 @@ const LinkIcon = loadAntdIcon("LinkOutlined");
 const CheckIcon = loadAntdIcon("CheckOutlined");
 const StopIcon = loadAntdIcon("StopOutlined");
 const StarIcon = loadAntdIcon("StarOutlined");
+const DownloadIcon = loadAntdIcon("DownloadOutlined");
 
 const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   const { t } = useLocale();
@@ -65,13 +63,6 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [items, setItems] = useState<CvItem[]>([]);
   const [editingItem, setEditingItem] = useState<CvItem | null>(null);
-
-  const fileTypeOptions = menuFileOrigin
-    .filter((f) => f.value !== "NONE")
-    .map((f) => ({
-      label: t(`option.file.${f.value}`),
-      value: f.value,
-    }));
 
   const fetchCvs = async () => {
     try {
@@ -94,14 +85,10 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   };
 
   const toPayload = async (values: CvFormValues) => {
-    const fileType = values.file_type ?? "URL";
-
-    // Ambil URL file sesuai tipe: URL manual atau hasil upload Cloudinary.
+    // Tipe file kini selalu UPLOAD: URL file berasal dari hasil upload.
     let fileUrl: string | null = null;
     let fileStoragePath: string | null = null;
-    if (fileType === "URL") {
-      fileUrl = values.file_url || null;
-    } else if (fileType === "UPLOAD" && Array.isArray(values.file_upload)) {
+    if (Array.isArray(values.file_upload)) {
       const uploaded = await getImagesArray(values.file_upload);
       fileUrl = uploaded[0] ?? null;
       fileStoragePath = values.file_upload[0]?.storagePath ?? null;
@@ -109,7 +96,7 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
 
     return {
       name: values.name,
-      fileType,
+      fileType: "UPLOAD" as const,
       fileUrl,
       fileStoragePath,
       description: values.description,
@@ -127,19 +114,16 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     setEditingItem(item);
     form.setFieldsValue({
       name: item.name,
-      file_type: item.file_type ?? "URL",
-      file_url: item.file_type === "URL" ? item.file_url : undefined,
-      file_upload:
-        item.file_type === "UPLOAD" && item.file_url
-          ? [
-              {
-                uid: "-1",
-                name: item.file_url.split("/").pop() || "file",
-                status: "done",
-                url: item.file_url,
-              },
-            ]
-          : undefined,
+      file_upload: item.file_url
+        ? [
+            {
+              uid: "-1",
+              name: item.file_url.split("/").pop() || "file",
+              status: "done",
+              url: item.file_url,
+            },
+          ]
+        : undefined,
       description: item.description,
       is_primary: item.is_primary,
     });
@@ -280,6 +264,30 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     }
   };
 
+  /** URL proxy file (melewati blokir delivery PDF Cloudinary). */
+  const buildProxyUrl = (item: CvItem, download: boolean): string => {
+    const params = new URLSearchParams({ url: item.file_url });
+    if (download) params.set("download", "1");
+    const name = item.name?.trim();
+    if (name) params.set("name", `${name}`);
+    return `/api/file?${params.toString()}`;
+  };
+
+  /** Buka file CV di tab baru (PDF dirender browser via proxy). */
+  const handleOpenFile = (item: CvItem) => {
+    window.open(buildProxyUrl(item, false), "_blank", "noopener,noreferrer");
+  };
+
+  /** Unduh file CV (Content-Disposition attachment via proxy). */
+  const handleDownloadFile = (item: CvItem) => {
+    const link = document.createElement("a");
+    link.href = buildProxyUrl(item, true);
+    link.rel = "noopener";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   useEffect(() => {
     // Defer via microtask agar setState di dalam fetchCvs tidak dipanggil
     // sinkron dari effect (pola yang sama dengan admin/form).
@@ -413,15 +421,32 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                     </Typography.Text>
                   )}
 
-                  <a
-                    href={item.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 text-sm flex items-center gap-1 hover:underline truncate"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <LinkIcon /> {t("col.file")}
-                  </a>
+                  <Space size={4} wrap>
+                    <Button
+                      type="text"
+                      size="small"
+                      className="!px-1"
+                      icon={<LinkIcon />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenFile(item);
+                      }}
+                    >
+                      {t("common.viewFile")}
+                    </Button>
+                    <Button
+                      type="text"
+                      size="small"
+                      className="!px-1"
+                      icon={<DownloadIcon />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownloadFile(item);
+                      }}
+                    >
+                      {t("common.download")}
+                    </Button>
+                  </Space>
 
                   <Typography.Text type="secondary" className="text-xs">
                     {dayjs(item.createdAt).format("DD MMM YYYY")}
@@ -448,11 +473,7 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         width={600}
         {...modalBodyProps()}
       >
-        <FormAdmin
-          formProps={{ form, initialValues: { file_type: "URL" } }}
-          layout={formLayout}
-          optionList={{ file_type: fileTypeOptions }}
-        />
+        <FormAdmin formProps={{ form }} layout={formLayout} />
       </Modal>
     </section>
   );

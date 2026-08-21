@@ -62,14 +62,21 @@ model LoginAttempt {
   @@index([ipAddress])
 }
 
+enum PersonalAvailability {
+  AVAILABLE
+  ONLY_FREELANCE
+  NOT_AVAILABLE
+}
+
 model Personal {
-  id            Int             @id @default(autoincrement())
+  id            Int                 @id @default(autoincrement())
   name          String
   about         String?
+  availability  PersonalAvailability @default(AVAILABLE)
   skills        String[]
   contacts      Json?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
   PersonalImage PersonalImage[]
 }
 
@@ -113,6 +120,8 @@ model Portfolio {
   skills            String[]
   repo_links        String[]
   web_link          String?
+  is_ongoing        Boolean          @default(true)
+  end_date          DateTime?
   status            PortfolioStatus @default(ACTIVE)
   order             Int             @default(0)
   createdAt         DateTime        @default(now())
@@ -175,22 +184,26 @@ enum FileOrigin {
   UPLOAD
 }
 
+enum CertificationCategory {
+  CERTIFICATION
+  COMPETENCY
+  ACADEMIC
+  TRAINING
+}
+
 model Certification {
-  id                Int                 @id @default(autoincrement())
-  title             String
-  issuer            String
-  issue_date        DateTime
-  expiry_date       DateTime?
-  credential_id     String?
-  credential_url    String?
-  image             String?
-  skills            String[]
-  file_type         FileOrigin          @default(NONE)
-  file_url          String?
-  file_storage_path String?
-  status            CertificationStatus @default(ACTIVE)
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
+  id             Int                   @id @default(autoincrement())
+  title          String
+  issuer         String
+  category       CertificationCategory @default(CERTIFICATION)
+  issue_date     DateTime
+  expiry_date    DateTime?
+  credential_id  String?
+  credential_url String?
+  skills         String[]
+  status         CertificationStatus   @default(ACTIVE)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
 }
 
 enum EducationType {

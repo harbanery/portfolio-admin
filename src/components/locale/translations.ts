@@ -49,6 +49,7 @@ const id: TranslationDict = {
   "common.import": "Impor",
   "common.downloadTemplate": "Unduh Template",
   "common.viewFile": "Lihat File",
+  "common.download": "Unduh",
 
   // Validation & notification
   "validation.required": "{field} wajib diisi.",
@@ -195,6 +196,8 @@ const id: TranslationDict = {
   "col.authors": "Penulis",
   "col.publishDate": "Tanggal Terbit",
   "col.url": "URL",
+  "col.category": "Kategori",
+  "col.endDate": "Tanggal Selesai",
 
   // Form fields (shared across entities)
   "form.title": "Judul",
@@ -233,10 +236,13 @@ const id: TranslationDict = {
   "form.name": "Nama",
   "form.about": "Tentang",
   "form.contacts": "Kontak",
-  "form.file_url": "URL File",
   "form.is_primary": "CV Utama",
-  "form.file_type": "Tipe File",
   "form.file": "Unggah File",
+  "form.file_upload": "Unggah File",
+  "form.availability": "Ketersediaan",
+  "form.is_ongoing": "Masih Berjalan",
+  "form.end_date": "Tanggal Selesai",
+  "form.category": "Kategori",
 
   // Publication form fields
   "form.publication_type": "Tipe Publikasi",
@@ -278,9 +284,6 @@ const id: TranslationDict = {
   "option.publication.BOOK": "Buku",
   "option.publication.PREPRINT": "Preprint",
   "option.publication.OTHER": "Lainnya",
-  "option.file.NONE": "Tidak Ada",
-  "option.file.URL": "URL",
-  "option.file.UPLOAD": "Unggah",
   "option.role.fullstack": "Full Stack Developer",
   "option.role.frontend": "Frontend Developer",
   "option.role.backend": "Backend Developer",
@@ -296,6 +299,13 @@ const id: TranslationDict = {
   "option.contact.instagram": "Instagram",
   "option.contact.website": "Website",
   "option.contact.other": "Lainnya",
+  "option.availability.AVAILABLE": "Tersedia",
+  "option.availability.ONLY_FREELANCE": "Hanya Freelance",
+  "option.availability.NOT_AVAILABLE": "Tidak Tersedia",
+  "option.certification.category.CERTIFICATION": "Sertifikat",
+  "option.certification.category.COMPETENCY": "Kompetensi",
+  "option.certification.category.ACADEMIC": "Gelar Akademik",
+  "option.certification.category.TRAINING": "Pelatihan",
 };
 
 const en: TranslationDict = {
@@ -334,6 +344,7 @@ const en: TranslationDict = {
   "common.import": "Import",
   "common.downloadTemplate": "Download Template",
   "common.viewFile": "View File",
+  "common.download": "Download",
 
   // Validation & notification
   "validation.required": "{field} is required.",
@@ -479,6 +490,8 @@ const en: TranslationDict = {
   "col.authors": "Authors",
   "col.publishDate": "Publish Date",
   "col.url": "URL",
+  "col.category": "Category",
+  "col.endDate": "End Date",
 
   // Form fields (shared across entities)
   "form.title": "Title",
@@ -517,10 +530,13 @@ const en: TranslationDict = {
   "form.name": "Name",
   "form.about": "About",
   "form.contacts": "Contacts",
-  "form.file_url": "File URL",
   "form.is_primary": "Primary CV",
-  "form.file_type": "File Type",
   "form.file": "Upload File",
+  "form.file_upload": "Upload File",
+  "form.availability": "Availability",
+  "form.is_ongoing": "Still Ongoing",
+  "form.end_date": "End Date",
+  "form.category": "Category",
 
   // Publication form fields
   "form.publication_type": "Publication Type",
@@ -560,9 +576,6 @@ const en: TranslationDict = {
   "option.publication.BOOK": "Book",
   "option.publication.PREPRINT": "Preprint",
   "option.publication.OTHER": "Other",
-  "option.file.NONE": "None",
-  "option.file.URL": "URL",
-  "option.file.UPLOAD": "Upload",
   "option.role.fullstack": "Full Stack Developer",
   "option.role.frontend": "Frontend Developer",
   "option.role.backend": "Backend Developer",
@@ -578,6 +591,13 @@ const en: TranslationDict = {
   "option.contact.instagram": "Instagram",
   "option.contact.website": "Website",
   "option.contact.other": "Other",
+  "option.availability.AVAILABLE": "Available",
+  "option.availability.ONLY_FREELANCE": "Only Freelance",
+  "option.availability.NOT_AVAILABLE": "Not Available",
+  "option.certification.category.CERTIFICATION": "Certificate",
+  "option.certification.category.COMPETENCY": "Competency",
+  "option.certification.category.ACADEMIC": "Academic Degree",
+  "option.certification.category.TRAINING": "Training",
 };
 
 export const TRANSLATIONS: Record<Locale, TranslationDict> = { id, en };

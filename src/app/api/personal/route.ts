@@ -23,6 +23,7 @@ export async function POST(request: Request) {
     const data = {
       name: body.name,
       about: body.about,
+      availability: body.availability || "AVAILABLE",
       skills: body.skills || [],
       contacts: body.contacts ?? undefined,
     };

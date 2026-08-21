@@ -18,28 +18,39 @@ import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { modalBodyProps } from "@/helpers/modal";
 import { asAppError } from "@/helpers/error";
-import { getImageString, getImagesArray, type UploadFileLike } from "@/helpers/image";
 import { useLocale } from "@/components/locale/LocaleProvider";
 import { skillsOptions } from "@/helpers/skills";
-import { menuFileOrigin } from "@/helpers/menu";
 import { FormLayout } from "@/models/form";
 import * as XLSX from "xlsx";
 
 export type CertificationStatus = "ACTIVE" | "NONACTIVE";
-export type CertificationFileType = "NONE" | "URL" | "UPLOAD";
+
+export type CertificationCategory =
+  | "CERTIFICATION"
+  | "COMPETENCY"
+  | "ACADEMIC"
+  | "TRAINING";
+
+/** Kategori certification yang didukung. */
+const CATEGORY_OPTIONS: CertificationCategory[] = [
+  "CERTIFICATION",
+  "COMPETENCY",
+  "ACADEMIC",
+  "TRAINING",
+];
+
+/** Default kategori certification. */
+const DEFAULT_CATEGORY: CertificationCategory = "CERTIFICATION";
 
 interface CertificationItem {
   id: number;
   title: string;
   issuer: string;
+  category?: CertificationCategory | string;
   issue_date: string;
   expiry_date?: string | null;
   credential_id?: string | null;
   credential_url?: string | null;
-  file_type: CertificationFileType;
-  file_url?: string | null;
-  file_storage_path?: string | null;
-  image?: string | null;
   skills: string[];
   status: CertificationStatus;
 }
@@ -48,27 +59,22 @@ interface CertificationItem {
 const XLS_COLUMNS = [
   "title",
   "issuer",
+  "category",
   "issue_date",
   "expiry_date",
   "credential_id",
   "credential_url",
-  "file_type",
-  "file_url",
-  "image",
   "skills",
 ];
 
 interface CertificationFormValues {
   title: string;
   issuer: string;
+  category?: CertificationCategory;
   issue_date?: dayjs.Dayjs;
   expiry_date?: dayjs.Dayjs;
   credential_id?: string | null;
   credential_url?: string | null;
-  file_type?: CertificationFileType;
-  file_url?: string;
-  file_upload?: UploadFileLike[];
-  image?: unknown;
   skills?: string[];
 }
 
@@ -96,12 +102,9 @@ const CertificationDecorator = ({
   const [fetching, setFetching] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [items, setItems] = useState<CertificationItem[]>([]);
-  const [editingItem, setEditingItem] = useState<CertificationItem | null>(null);
-
-  const fileTypeOptions = menuFileOrigin.map((f) => ({
-    label: t(`option.file.${f.value}`),
-    value: f.value,
-  }));
+  const [editingItem, setEditingItem] = useState<CertificationItem | null>(
+    null,
+  );
 
   const fetchCertifications = async () => {
     try {
@@ -123,35 +126,16 @@ const CertificationDecorator = ({
     }
   };
 
-  const toPayload = async (values: CertificationFormValues) => {
-    const imageString = await getImageString(values.image);
-    const fileType = values.file_type ?? "NONE";
-
-    // Ambil URL file sesuai tipe: URL manual atau hasil upload Cloudinary.
-    let fileUrl: string | null = null;
-    let fileStoragePath: string | null = null;
-    if (fileType === "URL") {
-      fileUrl = values.file_url || null;
-    } else if (fileType === "UPLOAD" && Array.isArray(values.file_upload)) {
-      const uploaded = await getImagesArray(values.file_upload);
-      fileUrl = uploaded[0] ?? null;
-      fileStoragePath = values.file_upload[0]?.storagePath ?? null;
-    }
-
-    return {
-      title: values.title,
-      issuer: values.issuer,
-      issueDate: values.issue_date?.toISOString(),
-      expiryDate: values.expiry_date?.toISOString() ?? null,
-      credentialId: values.credential_id,
-      credentialUrl: values.credential_url,
-      fileType,
-      fileUrl,
-      fileStoragePath,
-      image: imageString || null,
-      skills: values.skills || [],
-    };
-  };
+  const toPayload = (values: CertificationFormValues) => ({
+    title: values.title,
+    issuer: values.issuer,
+    category: values.category || DEFAULT_CATEGORY,
+    issueDate: values.issue_date?.toISOString(),
+    expiryDate: values.expiry_date?.toISOString() ?? null,
+    credentialId: values.credential_id,
+    credentialUrl: values.credential_url,
+    skills: values.skills || [],
+  });
 
   const handleAdd = () => {
     setEditingItem(null);
@@ -161,30 +145,20 @@ const CertificationDecorator = ({
 
   const handleEdit = (item: CertificationItem) => {
     setEditingItem(item);
+    const rawCategory = String(item.category ?? "").toUpperCase();
+    const category = CATEGORY_OPTIONS.includes(
+      rawCategory as CertificationCategory,
+    )
+      ? (rawCategory as CertificationCategory)
+      : DEFAULT_CATEGORY;
     form.setFieldsValue({
       title: item.title,
       issuer: item.issuer,
+      category,
       issue_date: item.issue_date ? dayjs(item.issue_date) : undefined,
       expiry_date: item.expiry_date ? dayjs(item.expiry_date) : undefined,
       credential_id: item.credential_id,
       credential_url: item.credential_url,
-      file_type: item.file_type ?? "NONE",
-      file_url:
-        item.file_type === "URL" ? (item.file_url ?? undefined) : undefined,
-      file_upload:
-        item.file_type === "UPLOAD" && item.file_url
-          ? [
-              {
-                uid: "-1",
-                name: item.file_url.split("/").pop() || "file",
-                status: "done",
-                url: item.file_url,
-              },
-            ]
-          : undefined,
-      image: item.image
-        ? [{ url: item.image, thumbUrl: item.image, status: "done" }]
-        : undefined,
       skills: item.skills,
     });
     setIsModalOpen(true);
@@ -194,9 +168,11 @@ const CertificationDecorator = ({
     setLoading(true);
     try {
       const values = await form.validateFields();
-      const payload = await toPayload(values);
+      const payload = toPayload(values);
       const response = await fetch(
-        editingItem ? `/api/certifications/${editingItem.id}` : "/api/certifications",
+        editingItem
+          ? `/api/certifications/${editingItem.id}`
+          : "/api/certifications",
         {
           method: editingItem ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
@@ -221,9 +197,7 @@ const CertificationDecorator = ({
       const err = asAppError(error);
       notification.error({
         key: "save-error",
-        title: err.errorFields
-          ? t("notif.validationError")
-          : t("notif.error"),
+        title: err.errorFields ? t("notif.validationError") : t("notif.error"),
         ...(err.errorFields
           ? {}
           : {
@@ -313,22 +287,16 @@ const CertificationDecorator = ({
         [
           "AWS Solutions Architect",
           "Amazon Web Services",
-          "2024-01-15",
-          "2027-01-15",
+          "CERTIFICATION",
+          "2024-01",
+          "2027-01",
           "AWS-123456",
           "https://aws.amazon.com/verification",
-          "URL",
-          "https://example.com/certificate.pdf",
-          "https://res.cloudinary.com/demo/image/upload/sample.png",
           "aws,cloud",
         ],
       ]);
       const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(
-        workbook,
-        worksheet,
-        "Certifications",
-      );
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Certifications");
       XLSX.writeFile(workbook, "certifications-template.xlsx");
       notification.success({
         key: "template-success",
@@ -364,23 +332,35 @@ const CertificationDecorator = ({
 
       if (!rows.length) throw new Error("File is empty");
 
-      const payload = rows.map((row) => ({
-        title: String(row.title ?? "").trim(),
-        issuer: String(row.issuer ?? "").trim(),
-        issueDate: row.issue_date ? new Date(String(row.issue_date)) : new Date(),
-        expiryDate: row.expiry_date ? new Date(String(row.expiry_date)) : null,
-        credentialId: row.credential_id ?? null,
-        credentialUrl: row.credential_url ?? null,
-        fileType: String(row.file_type ?? "NONE").toUpperCase(),
-        fileUrl: row.file_url ?? null,
-        image: row.image ?? null,
-        skills: row.skills
-          ? String(row.skills)
-              .split(",")
-              .map((s) => s.trim())
-              .filter(Boolean)
-          : [],
-      }));
+      const payload = rows.map((row) => {
+        const rawCategory = String(row.category ?? "")
+          .trim()
+          .toUpperCase();
+        const category = CATEGORY_OPTIONS.includes(
+          rawCategory as CertificationCategory,
+        )
+          ? (rawCategory as CertificationCategory)
+          : DEFAULT_CATEGORY;
+        return {
+          title: String(row.title ?? "").trim(),
+          issuer: String(row.issuer ?? "").trim(),
+          category,
+          issueDate: row.issue_date
+            ? new Date(String(row.issue_date))
+            : new Date(),
+          expiryDate: row.expiry_date
+            ? new Date(String(row.expiry_date))
+            : null,
+          credentialId: row.credential_id ?? null,
+          credentialUrl: row.credential_url ?? null,
+          skills: row.skills
+            ? String(row.skills)
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean)
+            : [],
+        };
+      });
 
       const response = await fetch("/api/certifications/import", {
         method: "POST",
@@ -434,16 +414,6 @@ const CertificationDecorator = ({
               <LinkIcon /> {t("common.openLink")}
             </a>
           )}
-          {record.file_type !== "NONE" && record.file_url && (
-            <a
-              href={record.file_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 text-xs flex items-center gap-1"
-            >
-              <LinkIcon /> {t("common.viewFile")}
-            </a>
-          )}
         </Space>
       ),
     },
@@ -454,32 +424,28 @@ const CertificationDecorator = ({
       responsive: ["sm"],
     },
     {
+      title: t("col.category"),
+      dataIndex: "category",
+      key: "category",
+      responsive: ["sm"],
+      render: (category: string) =>
+        category
+          ? t(`option.certification.category.${category}`)
+          : t(`option.certification.category.${DEFAULT_CATEGORY}`),
+    },
+    {
       title: t("col.issueDate"),
       dataIndex: "issue_date",
       key: "issue_date",
-      render: (date: string) => dayjs(date).format("DD MMM YYYY"),
+      render: (date: string) => dayjs(date).format("MMM YYYY"),
     },
     {
       title: t("col.expiryDate"),
       dataIndex: "expiry_date",
       key: "expiry_date",
       render: (date: string | null) =>
-        date ? dayjs(date).format("DD MMM YYYY") : t("common.noExpiry"),
+        date ? dayjs(date).format("MMM YYYY") : t("common.noExpiry"),
       responsive: ["md"],
-    },
-    {
-      title: t("col.fileType"),
-      dataIndex: "file_type",
-      key: "file_type",
-      responsive: ["md"],
-      render: (ftype: CertificationFileType) =>
-        ftype && ftype !== "NONE" ? (
-          <Tag color={ftype === "URL" ? "blue" : "cyan"}>
-            {t(`option.file.${ftype}`)}
-          </Tag>
-        ) : (
-          <Tag>{t("option.file.NONE")}</Tag>
-        ),
     },
     {
       title: t("common.status"),
@@ -494,6 +460,7 @@ const CertificationDecorator = ({
     {
       title: t("common.actions"),
       key: "actions",
+      fixed: "right",
       render: (_, record) => (
         <Space size="small" wrap>
           <Button
@@ -613,9 +580,7 @@ const CertificationDecorator = ({
 
       <Modal
         title={
-          editingItem
-            ? t("certifications.detail")
-            : t("certifications.add")
+          editingItem ? t("certifications.detail") : t("certifications.add")
         }
         open={isModalOpen}
         onOk={handleSave}
@@ -631,11 +596,17 @@ const CertificationDecorator = ({
         {...modalBodyProps()}
       >
         <FormAdmin
-          formProps={{ form, initialValues: { file_type: "NONE" } }}
+          formProps={{
+            form,
+            initialValues: { category: DEFAULT_CATEGORY },
+          }}
           layout={formLayout}
           optionList={{
             skills: skillsOptions,
-            file_type: fileTypeOptions,
+            category: CATEGORY_OPTIONS.map((c) => ({
+              label: t(`option.certification.category.${c}`),
+              value: c,
+            })),
           }}
         />
       </Modal>

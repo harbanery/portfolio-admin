@@ -13,6 +13,7 @@ import { getGithubRepoName } from "@/helpers";
 import { getImageString, getImagesArray } from "@/helpers/image";
 import { useLocale } from "@/components/locale/LocaleProvider";
 import { FormLayout } from "@/models/form";
+import dayjs from "dayjs";
 import {
   DndContext,
   PointerSensor,
@@ -56,6 +57,8 @@ interface ProjectItem {
   solutions?: string | null;
   story?: string | null;
   outcomes?: string[];
+  is_ongoing: boolean;
+  end_date?: string | null;
   order: number;
   status: ProjectStatus;
 }
@@ -80,6 +83,8 @@ interface ProjectFormValues {
   skills?: string[];
   repo_links?: string[];
   web_link?: string | null;
+  is_ongoing?: boolean;
+  end_date?: dayjs.Dayjs;
 }
 
 /** Wrapper div sortable (dnd-kit) dengan drag handle untuk kartu project. */
@@ -269,6 +274,10 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       skills: values.skills,
       repoLinks: values.repo_links || [],
       webLink: values.web_link,
+      isOngoing: values.is_ongoing ?? true,
+      endDate: values.is_ongoing === false && values.end_date
+        ? values.end_date.toISOString()
+        : null,
     };
   };
 
@@ -441,6 +450,8 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       skills: item.skills,
       repo_links: item.repo_links,
       web_link: item.web_link,
+      is_ongoing: item.is_ongoing ?? true,
+      end_date: item.end_date ? dayjs(item.end_date) : undefined,
     });
   };
 
@@ -636,6 +647,15 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                                 ? t("common.active")
                                 : t("common.inactive")}
                             </Tag>
+                            <Tag
+                              color={item.is_ongoing ? "processing" : "default"}
+                            >
+                              {item.is_ongoing
+                                ? t("form.is_ongoing")
+                                : item.end_date
+                                  ? dayjs(item.end_date).format("MMM YYYY")
+                                  : "-"}
+                            </Tag>
                           </div>
                         </div>
 
@@ -709,7 +729,10 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         {...modalBodyProps()}
       >
         <FormAdmin
-          formProps={{ form, initialValues: { project_type: "personal" } }}
+          formProps={{
+            form,
+            initialValues: { project_type: "personal", is_ongoing: true },
+          }}
           layout={formLayout}
           optionList={options}
         />

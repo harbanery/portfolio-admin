@@ -38,16 +38,11 @@ export async function PUT(
       data: {
         title: body.title,
         issuer: body.issuer,
+        category: body.category || "CERTIFICATION",
         issue_date: new Date(body.issueDate),
         expiry_date: body.expiryDate ? new Date(body.expiryDate) : null,
         credential_id: body.credentialId,
         credential_url: body.credentialUrl,
-        ...(body.fileType !== undefined && {
-          file_type: body.fileType,
-          file_url: body.fileUrl ?? null,
-          file_storage_path: body.fileStoragePath ?? null,
-        }),
-        ...(body.image !== undefined && { image: body.image }),
         skills: body.skills || [],
       },
     });

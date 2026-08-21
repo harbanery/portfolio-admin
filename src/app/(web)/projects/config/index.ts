@@ -109,6 +109,16 @@ export const formLayout: FormLayout[] = [
         type: "input",
         placeholder: "https://example.com",
       },
+      {
+        name: "is_ongoing",
+        type: "switch",
+      },
+      {
+        name: "end_date",
+        type: "month",
+        dependencies: ["is_ongoing"],
+        hiddenWhen: { field: "is_ongoing", notEquals: false },
+      },
     ],
   },
 ];

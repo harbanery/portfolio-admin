@@ -19,6 +19,13 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const publishDate = body.publishDate ? new Date(body.publishDate) : null;
+    if (!publishDate || Number.isNaN(publishDate.getTime())) {
+      return NextResponse.json(
+        { success: false, error: "Invalid publishDate" },
+        { status: 400 },
+      );
+    }
     const publication = await prisma.publication.create({
       data: {
         title: body.title,
@@ -34,7 +41,7 @@ export async function POST(request: Request) {
         pdf_url: body.pdfUrl,
         scholar_url: body.scholarUrl,
         abstract: body.abstract,
-        publish_date: new Date(body.publishDate),
+        publish_date: publishDate,
         citations: body.citations ?? 0,
         skills: body.skills || [],
         status: "ACTIVE",

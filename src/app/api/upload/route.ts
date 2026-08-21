@@ -20,7 +20,8 @@ export async function POST(request: NextRequest) {
     const data = await request.formData();
     const file: File | null = (data.get("image") ||
       data.get("file") ||
-      data.get("images")) as unknown as File;
+      data.get("images") ||
+      data.get("file_upload")) as unknown as File;
 
     if (!file || !(file instanceof File)) {
       return NextResponse.json(
@@ -36,10 +37,29 @@ export async function POST(request: NextRequest) {
     const folder = "admin-portfolio";
     const filename = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
 
+    const isImage = file.type.startsWith("image/");
+    // Gunakan endpoint `image` untuk gambar dan `raw` untuk dokumen
+    // (PDF/Microsoft Word). Resource `raw` disimpan apa adanya sehingga
+    // file dikirim sebagai byte asli.
+    const resourceSegment = isImage ? "image" : "raw";
+
+    /**
+     * Cloudinary memblokir delivery file ber-ekstensi .pdf/.zip (401
+     * "deny or ACL failure") ketika setting keamanan "Allow delivery of
+     * PDF and ZIP files" nonaktif. Sebagai workaround, PDF disimpan
+     * dengan ekstensi .docx (isi file tetap PDF apa adanya) sehingga
+     * tetap bisa dideliver; proxy /api/file menyajikannya kembali
+     * sebagai PDF (Content-Type application/pdf + nama file asli).
+     */
+    let storedFilename = filename;
+    if (!isImage && filename.toLowerCase().endsWith(".pdf")) {
+      storedFilename = `${filename.slice(0, -4)}.docx`;
+    }
+
     const uploadTimestamp = Math.floor(Date.now() / 1000);
     const params = {
       timestamp: uploadTimestamp,
-      public_id: filename,
+      public_id: storedFilename,
       folder: folder,
     };
 
@@ -49,18 +69,16 @@ export async function POST(request: NextRequest) {
     );
 
     const formData = new FormData();
-    formData.append("file", new Blob([buffer], { type: file.type }), filename);
+    formData.append(
+      "file",
+      new Blob([buffer], { type: file.type }),
+      storedFilename,
+    );
     formData.append("api_key", process.env.CLOUDINARY_API_KEY || "");
     formData.append("timestamp", uploadTimestamp.toString());
-    formData.append("public_id", filename);
+    formData.append("public_id", storedFilename);
     formData.append("folder", folder);
     formData.append("signature", signature);
-
-    const isImage = file.type.startsWith("image/");
-    // Gunakan endpoint `image` untuk gambar dan `auto` untuk dokumen
-    // (PDF/Google Docs/Microsoft Word) agar Cloudinary menentukan
-    // resource type yang tepat secara otomatis.
-    const resourceSegment = isImage ? "image" : "auto";
 
     const cloudinaryResponse = await fetch(
       `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/${resourceSegment}/upload`,

@@ -107,7 +107,7 @@ export const masterSkillsMap: Record<string, Skill> = {
     color: "#1890FF",
   },
   tailwind: {
-    name: "Tailwind",
+    name: "Tailwind CSS",
     category: ["library", "ui"],
     color: "#38BDF8",
   },

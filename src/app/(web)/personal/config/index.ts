@@ -14,6 +14,11 @@ export const formLayout: FormLayout[] = [
         name: "about",
         type: "editor",
       },
+      {
+        name: "availability",
+        type: "select",
+        required: true,
+      },
     ],
   },
   {

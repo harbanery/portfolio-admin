@@ -3,16 +3,25 @@ import { NextResponse } from "next/server";
 
 /** Konversi nilai XLS (unknown) ke tipe yang dibutuhkan Prisma. */
 const asString = (value: unknown): string | null =>
-  typeof value === "string" && value.trim().length > 0
-    ? value.trim()
-    : null;
+  typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
 
+/**
+ * Konversi nilai XLS ke Date, dengan validasi rentang tahun.
+ * Mencegah nilai absurd seperti tahun +044834 yang ditolak Prisma.
+ */
 const asDate = (value: unknown): Date | null => {
   if (!value) return null;
-  if (value instanceof Date) return value;
+  if (value instanceof Date) {
+    const y = value.getUTCFullYear();
+    if (y < 1900 || y > 2100) return null;
+    return value;
+  }
   if (typeof value === "string" || typeof value === "number") {
     const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? null : date;
+    const y = date.getUTCFullYear();
+    return Number.isNaN(date.getTime()) || y < 1900 || y > 2100
+      ? null
+      : date;
   }
   return null;
 };
@@ -26,6 +35,24 @@ const asSkills = (value: unknown): string[] => {
       .filter(Boolean);
   }
   return [];
+};
+
+const CERTIFICATION_CATEGORIES = [
+  "CERTIFICATION",
+  "COMPETENCY",
+  "ACADEMIC",
+  "TRAINING",
+] as const;
+
+type CertificationCategory =
+  (typeof CERTIFICATION_CATEGORIES)[number];
+
+/** Normalisasi kategori dari XLS; fallback ke CERTIFICATION jika tidak valid. */
+const asCategory = (value: unknown): CertificationCategory => {
+  const raw = typeof value === "string" ? value.trim().toUpperCase() : "";
+  return (CERTIFICATION_CATEGORIES as readonly string[]).includes(raw)
+    ? (raw as CertificationCategory)
+    : "CERTIFICATION";
 };
 
 /**
@@ -66,16 +93,11 @@ export async function POST(request: Request) {
       data: items.map((item) => ({
         title: String(item.title),
         issuer: String(item.issuer),
+        category: asCategory(item.category),
         issue_date: asDate(item.issueDate) ?? new Date(),
         expiry_date: asDate(item.expiryDate),
         credential_id: asString(item.credentialId),
         credential_url: asString(item.credentialUrl),
-        file_type: (asString(item.fileType) ?? "NONE").toUpperCase() as
-          | "NONE"
-          | "URL"
-          | "UPLOAD",
-        file_url: asString(item.fileUrl),
-        image: asString(item.image),
         skills: asSkills(item.skills),
         status: "ACTIVE",
       })),
