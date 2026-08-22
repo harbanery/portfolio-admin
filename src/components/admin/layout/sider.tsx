@@ -76,7 +76,8 @@ const SiderLayout: React.FC<SiderLayoutProps> = ({
     );
   }
 
-  // Desktop/tablet: collapsible inline sider.
+  // Desktop/tablet: collapsible inline sider. Sticky agar menu tetap
+  // terlihat mengikuti scroll.
   return (
     <Sider
       collapsed={collapsed}
@@ -85,6 +86,10 @@ const SiderLayout: React.FC<SiderLayoutProps> = ({
       theme="light"
       className="admin-sider"
       style={{
+        position: "sticky",
+        top: 0,
+        height: "100vh",
+        alignSelf: "flex-start",
         borderRight: "1px solid rgba(128, 128, 128, 0.12)",
       }}
       trigger={

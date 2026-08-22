@@ -53,6 +53,8 @@ const id: TranslationDict = {
   "common.downloadTemplate": "Unduh Template",
   "common.viewFile": "Lihat File",
   "common.download": "Unduh",
+  "common.noImage": "Belum ada gambar",
+  "clock.ariaTime": "Waktu saat ini {time}, {date}",
 
   // Validation & notification
   "validation.required": "{field} wajib diisi.",
@@ -102,19 +104,12 @@ const id: TranslationDict = {
   // Dashboard
   "dashboard.title": "Dashboard",
   "dashboard.description": "Ringkasan konten portfolio Anda",
-  "dashboard.stat.personal": "Data Personal",
   "dashboard.stat.projectsActive": "Project Aktif",
-  "dashboard.stat.projectsTotal": "Total Project",
   "dashboard.stat.experiences": "Experience",
   "dashboard.stat.certifications": "Certification",
   "dashboard.stat.educations": "Education",
   "dashboard.stat.publications": "Publication",
   "dashboard.stat.cv": "CV",
-  "dashboard.chart.activity": "Aktivitas Project (6 Bulan Terakhir)",
-  "dashboard.chart.activityBar": "Project Dibuat",
-  "dashboard.chart.status": "Status Project",
-  "dashboard.recent": "Project Terbaru",
-  "dashboard.empty": "Belum ada data",
 
   // Projects
   "projects.title": "Project",
@@ -364,6 +359,8 @@ const en: TranslationDict = {
   "common.downloadTemplate": "Download Template",
   "common.viewFile": "View File",
   "common.download": "Download",
+  "common.noImage": "No image yet",
+  "clock.ariaTime": "Current time {time}, {date}",
 
   // Validation & notification
   "validation.required": "{field} is required.",
@@ -413,19 +410,12 @@ const en: TranslationDict = {
   // Dashboard
   "dashboard.title": "Dashboard",
   "dashboard.description": "Overview of your portfolio content",
-  "dashboard.stat.personal": "Personal Info",
   "dashboard.stat.projectsActive": "Active Projects",
-  "dashboard.stat.projectsTotal": "Total Projects",
   "dashboard.stat.experiences": "Experiences",
   "dashboard.stat.certifications": "Certifications",
   "dashboard.stat.educations": "Educations",
   "dashboard.stat.publications": "Publications",
   "dashboard.stat.cv": "CVs",
-  "dashboard.chart.activity": "Project Activity (Last 6 Months)",
-  "dashboard.chart.activityBar": "Projects Created",
-  "dashboard.chart.status": "Project Status",
-  "dashboard.recent": "Recent Projects",
-  "dashboard.empty": "No data yet",
 
   // Projects
   "projects.title": "Project",

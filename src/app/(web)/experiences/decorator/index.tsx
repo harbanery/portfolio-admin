@@ -415,13 +415,13 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                   </Button>,
                 ]}
               >
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 h-full">
                   <div className="flex justify-between items-start gap-2">
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <h3 className="font-semibold text-lg m-0 truncate">
                         {item.job_title}
                       </h3>
-                      <p className="text-sm text-gray-500 m-0">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 m-0 truncate">
                         {item.company_name}
                       </p>
                     </div>
@@ -439,16 +439,9 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                     </Space>
                   </div>
 
-                  <Typography.Text type="secondary">
+                  <Typography.Text type="secondary" className="text-sm">
                     {formatPeriod(item)}
                   </Typography.Text>
-
-                  {item.description && (
-                    <p
-                      className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 text-justify m-0"
-                      dangerouslySetInnerHTML={{ __html: item.description }}
-                    />
-                  )}
                 </div>
               </Card>
             ))}

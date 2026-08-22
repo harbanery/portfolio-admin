@@ -345,19 +345,19 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                   </Button>,
                 ]}
               >
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 h-full">
                   <div className="flex justify-between items-start gap-2">
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <h3 className="font-semibold text-lg m-0 truncate">
                         {item.school}
                       </h3>
-                      <p className="text-sm text-gray-500 m-0">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 m-0 truncate">
                         {item.degree
                           ? `${item.degree} - ${item.field}`
                           : item.field}
                       </p>
                     </div>
-                    <div className="flex flex-col items-end gap-1">
+                    <div className="flex flex-col items-end gap-1 shrink-0">
                       <Tag
                         color={
                           item.education_type === "FORMAL"
@@ -375,27 +375,22 @@ const EducationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                     </div>
                   </div>
 
-                  <Typography.Text type="secondary">
+                  <Typography.Text type="secondary" className="text-sm">
                     {formatPeriod(item)}
                   </Typography.Text>
 
                   {item.grade && (
-                    <Typography.Text>
+                    <Typography.Text className="text-sm">
                       {t("form.grade")}: {item.grade}
                     </Typography.Text>
                   )}
 
-                  {item.description && (
-                    <p
-                      className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 text-justify m-0"
-                      dangerouslySetInnerHTML={{ __html: item.description }}
-                    />
-                  )}
-
                   {item.courses && item.courses.length > 0 && (
-                    <div className="flex flex-wrap gap-y-1">
+                    <div className="flex flex-wrap gap-1">
                       {item.courses.map((course) => (
-                        <Tag key={course}>{course}</Tag>
+                        <Tag key={course} className="m-0">
+                          {course}
+                        </Tag>
                       ))}
                     </div>
                   )}

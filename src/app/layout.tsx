@@ -12,7 +12,6 @@ import {
 } from "@/config/variables";
 import { neueHaasDisplay } from "@/utils/fonts/next-local";
 import { VercelCompatibleComponents } from "@/components/vercel";
-import Footer from "@/components/footer";
 
 export const metadata: Metadata = {
   title: META_TITLE,
@@ -129,10 +128,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <AntdRegistry>
           <LocaleProvider>
-            <ThemeProvider>
-              {children}
-              <Footer />
-            </ThemeProvider>
+            <ThemeProvider>{children}</ThemeProvider>
           </LocaleProvider>
         </AntdRegistry>
         <VercelCompatibleComponents.Analytics />

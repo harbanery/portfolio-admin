@@ -87,7 +87,11 @@ interface ProjectFormValues {
   end_date?: dayjs.Dayjs;
 }
 
-/** Wrapper div sortable (dnd-kit) dengan drag handle untuk kartu project. */
+/**
+ * Wrapper div sortable (dnd-kit) dengan drag handle terpisah dari kartu.
+ * Handle diposisikan absolute di pojok kanan atas; klik pada kartu tetap
+ * membuka modal karena handle memiliki listeners sendiri.
+ */
 const SortableItem: React.FC<{
   id: number;
   children: React.ReactNode;
@@ -110,15 +114,15 @@ const SortableItem: React.FC<{
 
   return (
     <div ref={setNodeRef} style={style} className="relative">
-      <Button
-        type="text"
-        size="small"
-        className="drag-handle absolute right-2 top-2 bg-white/70 dark:bg-black/40 rounded-full shadow-sm"
-        icon={<HolderOutlined />}
+      <button
+        type="button"
         aria-label="Drag to reorder"
+        className="drag-handle absolute right-2 top-2 z-10 flex h-7 w-7 cursor-grab items-center justify-center rounded-full border border-gray-200 bg-white/90 text-gray-500 shadow-sm transition-colors hover:text-gray-800 active:cursor-grabbing dark:border-zinc-700 dark:bg-zinc-800/90 dark:text-zinc-400"
         {...attributes}
         {...listeners}
-      />
+      >
+        <HolderOutlined />
+      </button>
       {children}
     </div>
   );
@@ -621,25 +625,23 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                         </Button>,
                       ]}
                     >
-                      <div className="flex flex-col gap-3">
-                        <div className="flex justify-between items-center gap-2">
-                          <div className="min-w-0 pr-6">
+                      <div className="flex flex-col gap-3 h-full">
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="min-w-0 flex-1 pr-8">
                             <h3 className="font-semibold text-lg m-0 truncate">
                               {item.title}
                             </h3>
-                            <div className="flex items-center text-sm text-gray-500 truncate">
-                              <p className="m-0">{getRoleLabel(item.role)}</p>
+                            <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 truncate">
+                              <span>{getRoleLabel(item.role)}</span>
                               {(item.company_name || item.client_name) && (
-                                <>
-                                  <span className="px-2">-</span>
-                                  <p className="m-0">
-                                    {item.company_name || item.client_name}
-                                  </p>
-                                </>
+                                <span className="truncate">
+                                  {" - "}
+                                  {item.company_name || item.client_name}
+                                </span>
                               )}
                             </div>
                           </div>
-                          <div>
+                          <div className="flex flex-col items-end gap-1 shrink-0">
                             <Tag
                               color={item.status === "ACTIVE" ? "green" : "red"}
                             >
@@ -659,50 +661,63 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                           </div>
                         </div>
 
-                        {item.image ? (
-                          <div onClick={(e) => e.stopPropagation()}>
+                        <div
+                          className="aspect-video w-full overflow-hidden rounded-md"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {item.image ? (
                             <Image
                               preview={{
                                 actionsRender: () => [],
                               }}
                               src={item.image}
                               alt={item.title}
+                              className="!h-full !w-full !object-cover"
                             />
-                          </div>
-                        ) : (
-                          <Empty />
-                        )}
-
-                        <div className="flex flex-wrap gap-y-1">
-                          {item.skills?.map((skill) => (
-                            <Tag key={skill}>{skill}</Tag>
-                          ))}
+                          ) : (
+                            <div className="flex aspect-video h-full w-full items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 dark:border-zinc-700 dark:bg-zinc-900">
+                              <span className="text-sm text-gray-400">
+                                {t("common.noImage")}
+                              </span>
+                            </div>
+                          )}
                         </div>
 
-                        {item.web_link && (
-                          <a
-                            onClick={(e) => e.stopPropagation()}
-                            href={item.web_link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-500 text-sm flex items-center gap-1 hover:underline truncate"
-                          >
-                            <LinkIcon /> {t("common.website")}
-                          </a>
+                        {item.skills && item.skills.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {item.skills.map((skill) => (
+                              <Tag key={skill} className="m-0">
+                                {skill}
+                              </Tag>
+                            ))}
+                          </div>
                         )}
 
-                        {item.repo_links && item.repo_links.length > 0 && (
-                          <div className="flex flex-col gap-1">
-                            {item.repo_links.map((link, idx) => (
+                        {(item.web_link ||
+                          (item.repo_links && item.repo_links.length > 0)) && (
+                          <div className="flex flex-row flex-wrap items-center gap-x-4 gap-y-1">
+                            {item.web_link && (
+                              <a
+                                onClick={(e) => e.stopPropagation()}
+                                href={item.web_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 text-sm flex items-center gap-1 hover:underline"
+                              >
+                                <LinkIcon /> {t("common.website")}
+                              </a>
+                            )}
+                            {item.repo_links?.map((link, idx) => (
                               <a
                                 key={idx + 1}
                                 onClick={(e) => e.stopPropagation()}
                                 href={link}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-500 text-sm flex items-center gap-1 hover:underline truncate"
+                                className="text-blue-500 text-sm flex items-center gap-1 hover:underline"
                               >
-                                <GithubIcon /> {getGithubRepoName(link) || link}
+                                <GithubIcon />{" "}
+                                {getGithubRepoName(link) || link}
                               </a>
                             ))}
                           </div>

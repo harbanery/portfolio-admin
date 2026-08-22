@@ -82,6 +82,10 @@ const PublicationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   const publicationTypeLabel = (type: PublicationType) =>
     t(`option.publication.${type}`);
 
+  /** Ambil teks polos dari HTML abstrak (untuk clamping yang rapi). */
+  const plainAbstract = (html?: string | null) =>
+    html ? html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() : "";
+
   const fetchPublications = async () => {
     try {
       const response = await fetch("/api/publications");
@@ -359,19 +363,19 @@ const PublicationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                   </Button>,
                 ]}
               >
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 h-full">
                   <div className="flex justify-between items-start gap-2">
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <h3 className="font-semibold text-lg m-0 line-clamp-2">
                         {item.title}
                       </h3>
                       {item.journal_name && (
-                        <p className="text-sm text-gray-500 m-0 truncate">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 m-0 truncate">
                           {item.journal_name}
                         </p>
                       )}
                     </div>
-                    <div className="flex flex-col items-end gap-1">
+                    <div className="flex flex-col items-end gap-1 shrink-0">
                       <Tag color="geekblue">
                         {publicationTypeLabel(item.publication_type)}
                       </Tag>
@@ -383,70 +387,81 @@ const PublicationDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                     </div>
                   </div>
 
-                  <Typography.Text type="secondary">
+                  <Typography.Text type="secondary" className="text-sm">
                     {dayjs(item.publish_date).format("MMM YYYY")}
                     {item.publisher ? ` - ${item.publisher}` : ""}
                   </Typography.Text>
 
                   {item.authors && item.authors.length > 0 && (
-                    <Typography.Text className="text-sm">
+                    <Typography.Text className="text-sm line-clamp-1">
                       {item.authors.join(", ")}
                     </Typography.Text>
                   )}
 
                   {item.abstract && (
-                    <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 text-justify m-0">
-                      {item.abstract}
+                    <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 m-0">
+                      {plainAbstract(item.abstract)}
                     </p>
                   )}
 
-                  <div className="flex flex-wrap gap-y-1 items-center">
-                    {item.doi && <Tag color="blue">DOI: {item.doi}</Tag>}
-                    {item.citations > 0 && (
-                      <Tag color="orange">
-                        {t("col.citations")}: {item.citations}
-                      </Tag>
-                    )}
-                    {item.skills?.map((skill) => (
-                      <Tag key={skill}>{skill}</Tag>
-                    ))}
-                  </div>
+                  {((item.doi || item.citations > 0) ||
+                    (item.skills && item.skills.length > 0)) && (
+                    <div className="flex flex-wrap gap-1 items-center">
+                      {item.doi && (
+                        <Tag color="blue" className="m-0">
+                          DOI: {item.doi}
+                        </Tag>
+                      )}
+                      {item.citations > 0 && (
+                        <Tag color="orange" className="m-0">
+                          {t("col.citations")}: {item.citations}
+                        </Tag>
+                      )}
+                      {item.skills?.map((skill) => (
+                        <Tag key={skill} className="m-0">
+                          {skill}
+                        </Tag>
+                      ))}
+                    </div>
+                  )}
 
-                  <div className="flex flex-col gap-1">
-                    {item.url && (
-                      <a
-                        href={item.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 text-sm flex items-center gap-1 hover:underline truncate"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <LinkIcon /> {t("col.url")}
-                      </a>
-                    )}
-                    {item.pdf_url && (
-                      <a
-                        href={item.pdf_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 text-sm flex items-center gap-1 hover:underline truncate"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <LinkIcon /> PDF
-                      </a>
-                    )}
-                    {item.scholar_url && (
-                      <a
-                        href={item.scholar_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 text-sm flex items-center gap-1 hover:underline truncate"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <LinkIcon /> Google Scholar
-                      </a>
-                    )}
-                  </div>
+                  {(item.url || item.pdf_url || item.scholar_url) && (
+                    <div className="flex flex-row flex-wrap items-center gap-x-4 gap-y-1">
+                      {item.url && (
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 text-sm flex items-center gap-1 hover:underline"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <LinkIcon /> {t("col.url")}
+                        </a>
+                      )}
+                      {item.pdf_url && (
+                        <a
+                          href={item.pdf_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 text-sm flex items-center gap-1 hover:underline"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <LinkIcon /> PDF
+                        </a>
+                      )}
+                      {item.scholar_url && (
+                        <a
+                          href={item.scholar_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 text-sm flex items-center gap-1 hover:underline"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <LinkIcon /> Google Scholar
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
               </Card>
             ))}

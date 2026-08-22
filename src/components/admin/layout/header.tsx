@@ -7,6 +7,7 @@ import { loadAntdIcon } from "@/components/custom/icon";
 import { menuAdminConfig } from "@/helpers/menu";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 import LanguageToggle from "@/components/locale/LanguageToggle";
+import RealtimeClock from "@/components/custom/clock";
 import { useLocale } from "@/components/locale/LocaleProvider";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 
@@ -72,6 +73,7 @@ const HeaderLayout: React.FC<{
       <Space size="middle">
         <LanguageToggle />
         <ThemeToggle />
+        <RealtimeClock />
       </Space>
     </Header>
   );

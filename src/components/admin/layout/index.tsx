@@ -5,6 +5,7 @@ import { useState } from "react";
 import SiderLayout from "./sider";
 import HeaderLayout from "./header";
 import ContentLayout from "./content";
+import Footer from "@/components/footer";
 
 const BaseLayout = ({ children }: { children: React.ReactNode }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -30,7 +31,8 @@ const BaseLayout = ({ children }: { children: React.ReactNode }) => {
       >
         <HeaderLayout onMobileMenuClick={() => setMobileOpen(true)} />
         <ContentLayout>{children}</ContentLayout>
-        {/* <FooterLayout /> */}
+
+        <Footer />
       </Layout>
     </Layout>
   );
