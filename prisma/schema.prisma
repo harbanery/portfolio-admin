@@ -35,19 +35,28 @@ model DailyEntries {
   ChecklistItems ChecklistItems[]
 }
 
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  FREELANCE
+  INTERNSHIP
+}
+
 model Experience {
-  id           Int              @id @default(autoincrement())
-  job_title    String
-  company_name String
-  description  String?
-  skills       String[]
-  images       String[]
-  start_date   DateTime
-  end_date     DateTime?
-  is_present   Boolean          @default(false)
-  status       ExperienceStatus @default(ACTIVE)
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  id              Int              @id @default(autoincrement())
+  job_title       String
+  company_name    String
+  employment_type EmploymentType   @default(FULL_TIME)
+  description     String?
+  skills          String[]
+  images          String[]
+  start_date      DateTime
+  end_date        DateTime?
+  is_present      Boolean          @default(false)
+  status          ExperienceStatus @default(ACTIVE)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 }
 
 model LoginAttempt {
@@ -200,6 +209,8 @@ model Certification {
   expiry_date    DateTime?
   credential_id  String?
   credential_url String?
+  file_url       String?
+  file_path      String?
   skills         String[]
   status         CertificationStatus   @default(ACTIVE)
   createdAt      DateTime              @default(now())

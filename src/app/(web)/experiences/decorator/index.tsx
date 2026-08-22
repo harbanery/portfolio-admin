@@ -2,7 +2,17 @@
 
 import FormAdmin from "@/components/admin/form";
 import { loadAntdIcon } from "@/components/custom/icon";
-import { App, Button, Form, Modal, Card, Tag, Empty, Typography } from "antd";
+import {
+  App,
+  Button,
+  Form,
+  Modal,
+  Card,
+  Tag,
+  Empty,
+  Typography,
+  Space,
+} from "antd";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import LoaderPage from "@/components/admin/loader";
@@ -14,10 +24,30 @@ import { FormLayout } from "@/models/form";
 
 export type ExperienceStatus = "ACTIVE" | "NONACTIVE";
 
+export type EmploymentType =
+  | "FULL_TIME"
+  | "PART_TIME"
+  | "CONTRACT"
+  | "FREELANCE"
+  | "INTERNSHIP";
+
+/** Tipe pekerjaan yang didukung. */
+const EMPLOYMENT_TYPE_OPTIONS: EmploymentType[] = [
+  "FULL_TIME",
+  "PART_TIME",
+  "CONTRACT",
+  "FREELANCE",
+  "INTERNSHIP",
+];
+
+/** Default tipe pekerjaan. */
+const DEFAULT_EMPLOYMENT_TYPE: EmploymentType = "FULL_TIME";
+
 interface ExperienceItem {
   id: number;
   job_title: string;
   company_name: string;
+  employment_type?: EmploymentType | string;
   description?: string | null;
   images: string[];
   start_date: string;
@@ -29,6 +59,7 @@ interface ExperienceItem {
 interface ExperienceFormValues {
   job_title: string;
   company_name: string;
+  employment_type?: EmploymentType;
   description?: string | null;
   images?: unknown;
   period?: Array<dayjs.Dayjs | undefined>;
@@ -81,6 +112,7 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     return {
       jobTitle: values.job_title,
       companyName: values.company_name,
+      employmentType: values.employment_type || DEFAULT_EMPLOYMENT_TYPE,
       description: values.description,
       images: imagesArray,
       startDate: start?.toISOString(),
@@ -219,9 +251,16 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   };
 
   const setDetailFields = (item: Partial<ExperienceItem>) => {
+    const rawType = String(item.employment_type ?? "").toUpperCase();
+    const employmentType = EMPLOYMENT_TYPE_OPTIONS.includes(
+      rawType as EmploymentType,
+    )
+      ? (rawType as EmploymentType)
+      : DEFAULT_EMPLOYMENT_TYPE;
     detailForm.setFieldsValue({
       job_title: item.job_title,
       company_name: item.company_name,
+      employment_type: employmentType,
       description: item.description,
       images: item.images?.map((url) => ({
         url,
@@ -386,11 +425,18 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                         {item.company_name}
                       </p>
                     </div>
-                    <Tag color={item.status === "ACTIVE" ? "green" : "red"}>
-                      {item.status === "ACTIVE"
-                        ? t("common.active")
-                        : t("common.inactive")}
-                    </Tag>
+                    <Space size={4} wrap>
+                      {item.employment_type && (
+                        <Tag color="blue">
+                          {t(`option.employment.type.${item.employment_type}`)}
+                        </Tag>
+                      )}
+                      <Tag color={item.status === "ACTIVE" ? "green" : "red"}>
+                        {item.status === "ACTIVE"
+                          ? t("common.active")
+                          : t("common.inactive")}
+                      </Tag>
+                    </Space>
                   </div>
 
                   <Typography.Text type="secondary">
@@ -424,7 +470,16 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         width={700}
         {...modalBodyProps()}
       >
-        <FormAdmin formProps={{ form }} layout={formLayout} />
+        <FormAdmin
+          formProps={{ form, initialValues: { employment_type: DEFAULT_EMPLOYMENT_TYPE } }}
+          layout={formLayout}
+          optionList={{
+            employment_type: EMPLOYMENT_TYPE_OPTIONS.map((type) => ({
+              label: t(`option.employment.type.${type}`),
+              value: type,
+            })),
+          }}
+        />
       </Modal>
 
       <Modal
@@ -442,6 +497,12 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
           formProps={{ form: detailForm }}
           layout={formLayout}
           formValue={dataDetail}
+          optionList={{
+            employment_type: EMPLOYMENT_TYPE_OPTIONS.map((type) => ({
+              label: t(`option.employment.type.${type}`),
+              value: type,
+            })),
+          }}
         />
       </Modal>
     </section>

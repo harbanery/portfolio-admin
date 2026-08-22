@@ -36,6 +36,7 @@ export async function PUT(
       data: {
         job_title: body.jobTitle,
         company_name: body.companyName,
+        employment_type: body.employmentType || "FULL_TIME",
         description: body.description,
         skills: body.skills || [],
         images: body.images || [],

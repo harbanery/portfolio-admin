@@ -43,6 +43,8 @@ export async function PUT(
         expiry_date: body.expiryDate ? new Date(body.expiryDate) : null,
         credential_id: body.credentialId,
         credential_url: body.credentialUrl,
+        file_url: body.fileUrl,
+        file_path: body.filePath,
         skills: body.skills || [],
       },
     });

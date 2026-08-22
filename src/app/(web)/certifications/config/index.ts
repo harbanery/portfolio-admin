@@ -41,6 +41,13 @@ export const formLayout: FormLayout[] = [
         required: false,
       },
       {
+        name: "file_upload",
+        type: "file_upload",
+        accept:
+          ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        required: false,
+      },
+      {
         name: "skills",
         type: "select_multiple",
         required: false,

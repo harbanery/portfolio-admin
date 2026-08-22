@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { modalBodyProps } from "@/helpers/modal";
 import { asAppError } from "@/helpers/error";
+import { getImagesArray, type UploadFileLike } from "@/helpers/image";
 import { useLocale } from "@/components/locale/LocaleProvider";
 import { skillsOptions } from "@/helpers/skills";
 import { FormLayout } from "@/models/form";
@@ -51,6 +52,8 @@ interface CertificationItem {
   expiry_date?: string | null;
   credential_id?: string | null;
   credential_url?: string | null;
+  file_url?: string | null;
+  file_path?: string | null;
   skills: string[];
   status: CertificationStatus;
 }
@@ -75,6 +78,7 @@ interface CertificationFormValues {
   expiry_date?: dayjs.Dayjs;
   credential_id?: string | null;
   credential_url?: string | null;
+  file_upload?: UploadFileLike[];
   skills?: string[];
 }
 
@@ -126,16 +130,29 @@ const CertificationDecorator = ({
     }
   };
 
-  const toPayload = (values: CertificationFormValues) => ({
-    title: values.title,
-    issuer: values.issuer,
-    category: values.category || DEFAULT_CATEGORY,
-    issueDate: values.issue_date?.toISOString(),
-    expiryDate: values.expiry_date?.toISOString() ?? null,
-    credentialId: values.credential_id,
-    credentialUrl: values.credential_url,
-    skills: values.skills || [],
-  });
+  const toPayload = async (values: CertificationFormValues) => {
+    // Ambil URL file hasil upload (jika ada file yang diunggah).
+    let fileUrl: string | null = null;
+    let filePath: string | null = null;
+    if (Array.isArray(values.file_upload) && values.file_upload.length > 0) {
+      const uploaded = await getImagesArray(values.file_upload);
+      fileUrl = uploaded[0] ?? null;
+      filePath = values.file_upload[0]?.storagePath ?? null;
+    }
+
+    return {
+      title: values.title,
+      issuer: values.issuer,
+      category: values.category || DEFAULT_CATEGORY,
+      issueDate: values.issue_date?.toISOString(),
+      expiryDate: values.expiry_date?.toISOString() ?? null,
+      credentialId: values.credential_id,
+      credentialUrl: values.credential_url,
+      fileUrl,
+      filePath,
+      skills: values.skills || [],
+    };
+  };
 
   const handleAdd = () => {
     setEditingItem(null);
@@ -159,6 +176,16 @@ const CertificationDecorator = ({
       expiry_date: item.expiry_date ? dayjs(item.expiry_date) : undefined,
       credential_id: item.credential_id,
       credential_url: item.credential_url,
+      file_upload: item.file_url
+        ? [
+            {
+              uid: "-1",
+              name: item.file_url.split("/").pop() || "file",
+              status: "done",
+              url: item.file_url,
+            },
+          ]
+        : undefined,
       skills: item.skills,
     });
     setIsModalOpen(true);
@@ -168,7 +195,7 @@ const CertificationDecorator = ({
     setLoading(true);
     try {
       const values = await form.validateFields();
-      const payload = toPayload(values);
+      const payload = await toPayload(values);
       const response = await fetch(
         editingItem
           ? `/api/certifications/${editingItem.id}`
@@ -396,6 +423,14 @@ const CertificationDecorator = ({
     return false; // cegah auto upload antd
   };
 
+  /** URL proxy file (delivery PDF/DOCX via /api/file). */
+  const buildProxyUrl = (url: string, download: boolean, name?: string) => {
+    const params = new URLSearchParams({ url });
+    if (download) params.set("download", "1");
+    if (name) params.set("name", name);
+    return `/api/file?${params.toString()}`;
+  };
+
   const columns: ColumnsType<CertificationItem> = [
     {
       title: t("col.title"),
@@ -413,6 +448,24 @@ const CertificationDecorator = ({
             >
               <LinkIcon /> {t("common.openLink")}
             </a>
+          )}
+          {record.file_url && (
+            <Space size={4}>
+              <a
+                href={buildProxyUrl(record.file_url, false, record.title)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 text-xs flex items-center gap-1"
+              >
+                <LinkIcon /> {t("common.viewFile")}
+              </a>
+              <a
+                href={buildProxyUrl(record.file_url, true, record.title)}
+                className="text-blue-500 text-xs flex items-center gap-1"
+              >
+                <DownloadIcon /> {t("common.download")}
+              </a>
+            </Space>
           )}
         </Space>
       ),
