@@ -138,7 +138,7 @@ export const masterSkillsMap: Record<string, Skill> = {
   },
   cloudinary: {
     name: "Cloudinary",
-    category: ["library", "cloud"],
+    category: ["cloud", "storage"],
     color: "#3448C5",
   },
   nextintl: {
@@ -205,16 +205,6 @@ export const masterSkillsMap: Record<string, Skill> = {
     category: ["tool", "version-control"],
     color: "#181717",
   },
-  jira: {
-    name: "Jira",
-    category: ["tool", "project-management"],
-    color: "#0052CC",
-  },
-  slack: {
-    name: "Slack",
-    category: ["tool", "communication"],
-    color: "#4A154B",
-  },
   postman: {
     name: "Postman",
     category: ["tool", "api-testing"],
@@ -267,13 +257,8 @@ export const masterSkillsMap: Record<string, Skill> = {
   },
   minio: {
     name: "MinIO",
-    category: ["tool", "storage"],
+    category: ["cloud", "storage"],
     color: "#C72E49",
-  },
-  figma: {
-    name: "Figma",
-    category: ["tool", "design"],
-    color: "#F24E1E",
   },
   cicd: {
     name: "CI/CD",
@@ -427,6 +412,220 @@ export const masterSkillsMap: Record<string, Skill> = {
     name: "React Native",
     category: ["framework", "mobile"],
     color: "#61DAFB",
+  },
+
+  // AI Tools
+  claude: {
+    name: "Claude",
+    category: ["ai-tool", "assistant"],
+    color: "#D97757",
+  },
+  claudeweb: {
+    name: "Claude Web",
+    category: ["ai-tool", "assistant"],
+    color: "#D97757",
+  },
+  claudecode: {
+    name: "Claude Code",
+    category: ["ai-tool", "coding"],
+    color: "#D97757",
+  },
+  chatgpt: {
+    name: "ChatGPT",
+    category: ["ai-tool", "assistant"],
+    color: "#10A37F",
+  },
+  openai: {
+    name: "OpenAI API",
+    category: ["ai-tool", "api"],
+    color: "#412991",
+  },
+  gemini: {
+    name: "Gemini",
+    category: ["ai-tool", "assistant"],
+    color: "#8E75B2",
+  },
+  copilot: {
+    name: "GitHub Copilot",
+    category: ["ai-tool", "coding"],
+    color: "#24292E",
+  },
+  cursor: {
+    name: "Cursor",
+    category: ["ai-tool", "coding", "editor"],
+    color: "#000000",
+  },
+  factorydroid: {
+    name: "Factory Droid",
+    category: ["ai-tool", "coding", "agent"],
+    color: "#635BFF",
+  },
+  windsurf: {
+    name: "Windsurf",
+    category: ["ai-tool", "coding", "editor"],
+    color: "#12B981",
+  },
+  perplexity: {
+    name: "Perplexity",
+    category: ["ai-tool", "search"],
+    color: "#20808D",
+  },
+  midjourney: {
+    name: "Midjourney",
+    category: ["ai-tool", "image"],
+    color: "#1F2937",
+  },
+  stablefusion: {
+    name: "Stable Diffusion",
+    category: ["ai-tool", "image"],
+    color: "#7C3AED",
+  },
+  huggingface: {
+    name: "Hugging Face",
+    category: ["ai-tool", "ml"],
+    color: "#FFD21E",
+  },
+  langchain: {
+    name: "LangChain",
+    category: ["ai-tool", "framework"],
+    color: "#1C3C3C",
+  },
+
+  // Applications
+  vscode: {
+    name: "Visual Studio Code",
+    category: ["application", "editor"],
+    color: "#007ACC",
+  },
+  visualstudio: {
+    name: "Visual Studio",
+    category: ["application", "ide"],
+    color: "#5C2D91",
+  },
+  matlab: {
+    name: "MATLAB",
+    category: ["application", "computing"],
+    color: "#E16737",
+  },
+  intellijidea: {
+    name: "IntelliJ IDEA",
+    category: ["application", "ide"],
+    color: "#000000",
+  },
+  androidstudio: {
+    name: "Android Studio",
+    category: ["application", "ide"],
+    color: "#3DDC84",
+  },
+  xcode: {
+    name: "Xcode",
+    category: ["application", "ide"],
+    color: "#147EFB",
+  },
+  notepadpp: {
+    name: "Notepad++",
+    category: ["application", "editor"],
+    color: "#90E59A",
+  },
+  sublime: {
+    name: "Sublime Text",
+    category: ["application", "editor"],
+    color: "#FF9800",
+  },
+  vim: {
+    name: "Vim",
+    category: ["application", "editor"],
+    color: "#019733",
+  },
+  insomnia: {
+    name: "Insomnia",
+    category: ["application", "api-testing"],
+    color: "#5849BE",
+  },
+  putty: {
+    name: "PuTTY",
+    category: ["application", "terminal"],
+    color: "#1D5B9B",
+  },
+  winscp: {
+    name: "WinSCP",
+    category: ["application", "ftp"],
+    color: "#215D9C",
+  },
+  filezilla: {
+    name: "FileZilla",
+    category: ["application", "ftp"],
+    color: "#BF0000",
+  },
+  gitbash: {
+    name: "Git Bash",
+    category: ["application", "terminal"],
+    color: "#F05032",
+  },
+  dockerdesktop: {
+    name: "Docker Desktop",
+    category: ["application", "containers"],
+    color: "#2496ED",
+  },
+  ohmyzsh: {
+    name: "Oh My Zsh",
+    category: ["application", "terminal"],
+    color: "#4EAA25",
+  },
+  office: {
+    name: "Microsoft Office",
+    category: ["application", "productivity"],
+    color: "#D83B01",
+  },
+  excel: {
+    name: "Microsoft Excel",
+    category: ["application", "productivity"],
+    color: "#217346",
+  },
+  word: {
+    name: "Microsoft Word",
+    category: ["application", "productivity"],
+    color: "#2B579A",
+  },
+  powerpoint: {
+    name: "Microsoft PowerPoint",
+    category: ["application", "productivity"],
+    color: "#D24726",
+  },
+  notion: {
+    name: "Notion",
+    category: ["tool", "productivity"],
+    color: "#000000",
+  },
+  figma: {
+    name: "Figma",
+    category: ["tool", "design"],
+    color: "#F24E1E",
+  },
+  jira: {
+    name: "Jira",
+    category: ["tool", "project-management"],
+    color: "#0052CC",
+  },
+  trello: {
+    name: "Trello",
+    category: ["tool", "project-management"],
+    color: "#0079BF",
+  },
+  slack: {
+    name: "Slack",
+    category: ["tool", "communication"],
+    color: "#4A154B",
+  },
+  discord: {
+    name: "Discord",
+    category: ["application", "communication"],
+    color: "#5865F2",
+  },
+  zoom: {
+    name: "Zoom",
+    category: ["application", "communication"],
+    color: "#2D8CFF",
   },
 };
 

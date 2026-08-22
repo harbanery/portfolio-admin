@@ -393,6 +393,83 @@ const FormAdmin = ({
     [optionList, t],
   );
 
+  /** Render daftar bahasa (nama + tingkat kemampuan), mirip contact_list. */
+  const renderLanguageList = useCallback(
+    (item: FormLayoutItem, fp: FormProps) => {
+      const proficiencyOptions: Array<{ label: string; value: string }> =
+        (optionList?.[item.name] as unknown as Array<
+          { label: string; value: string }
+        >) ?? [];
+
+      return (
+        <Form.List key={item.name} name={item.name}>
+          {(fields, { add, remove }) => (
+            <div className="flex flex-col gap-2">
+              <label>{t(`form.${item.name}`)}</label>
+              {fields.map(({ key, name, ...restField }) => (
+                <div
+                  key={key}
+                  className="flex flex-col sm:flex-row gap-2 sm:items-center"
+                >
+                  <Form.Item
+                    {...restField}
+                    name={[name, "name"]}
+                    rules={[
+                      { required: true, message: t("common.languageName") },
+                    ]}
+                    className="mb-0"
+                    style={{ marginBottom: 0, flex: 1 }}
+                  >
+                    {renderField({
+                      type: "input",
+                      name,
+                      placeholder: t("common.languageName"),
+                      disabled: item.disabled,
+                    })}
+                  </Form.Item>
+                  <Form.Item
+                    {...restField}
+                    name={[name, "level"]}
+                    rules={[
+                      { required: true, message: t("common.languageLevel") },
+                    ]}
+                    className="mb-0"
+                    style={{ marginBottom: 0, width: "200px", flex: "none" }}
+                  >
+                    {renderField({
+                      type: "select",
+                      name,
+                      placeholder: t("common.languageLevel"),
+                      disabled: item.disabled,
+                      select: { options: proficiencyOptions },
+                    })}
+                  </Form.Item>
+                  <Button
+                    danger
+                    disabled={item.disabled}
+                    onClick={() => remove(name)}
+                    icon={<DeleteOutlined />}
+                  />
+                </div>
+              ))}
+              <Button
+                type="dashed"
+                disabled={item.disabled || fp.disabled}
+                onClick={() => add({ level: "PROFESSIONAL" })}
+                icon={<PlusOutlined />}
+                block
+                style={{ margin: "0 0 24px" }}
+              >
+                {t("common.addLanguage")}
+              </Button>
+            </div>
+          )}
+        </Form.List>
+      );
+    },
+    [optionList, t],
+  );
+
   /** Render item form standar (dipakai langsung atau dalam wrapper kondisional). */
   const renderStandardField = useCallback(
     (item: FormLayoutItem) => (
@@ -448,6 +525,11 @@ const FormAdmin = ({
               /* ---- contact list ---- */
               if (item.type === "contact_list") {
                 return renderContactList(item, formProps as FormProps);
+              }
+
+              /* ---- language list ---- */
+              if (item.type === "language_list") {
+                return renderLanguageList(item, formProps as FormProps);
               }
 
               /* ---- repeatable list ---- */

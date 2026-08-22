@@ -9,7 +9,7 @@ import { asAppError } from "@/helpers/error";
 import { getImagesArray } from "@/helpers/image";
 import { useLocale } from "@/components/locale/LocaleProvider";
 import { skillsOptions } from "@/helpers/skills";
-import { menuContactType } from "@/helpers/menu";
+import { menuContactType, menuOpenToRoles } from "@/helpers/menu";
 import { FormLayout } from "@/models/form";
 
 const AVAILABILITY_OPTIONS = [
@@ -18,12 +18,18 @@ const AVAILABILITY_OPTIONS = [
   "NOT_AVAILABLE",
 ] as const;
 
+/** Tingkat kemampuan bahasa yang didukung. */
+const LANGUAGE_LEVEL_OPTIONS = ["NATIVE", "PROFESSIONAL", "LIMITED"] as const;
+
 interface PersonalItem {
   id: number;
   name: string;
   about?: string | null;
   availability?: string;
+  open_to?: string[];
   skills: string[];
+  priority_skills?: string[];
+  languages?: Array<{ name: string; level: string }> | null;
   contacts?: Array<{ type: string; value: string }> | null;
   PersonalImage: Array<{ id: number; url: string }>;
 }
@@ -32,7 +38,10 @@ interface PersonalFormValues {
   name: string;
   about?: string | null;
   availability?: string;
+  open_to?: string[];
   skills?: string[];
+  priority_skills?: string[];
+  languages?: Array<{ name: string; level: string }>;
   contacts?: Array<{ type: string; value: string }>;
   images?: unknown;
 }
@@ -48,10 +57,26 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
 
+  // Pantau nilai skills agar opsi priority_skills hanya berisi skill
+  // yang sudah dipilih (bukan seluruh master skills).
+  const selectedSkills = Form.useWatch("skills", form) ?? [];
+
   const options = {
     skills: skillsOptions,
+    // Hanya skill terpilih yang bisa dijadikan prioritas.
+    priority_skills: skillsOptions.filter((opt) =>
+      selectedSkills.includes(String(opt.value)),
+    ),
     availability: AVAILABILITY_OPTIONS.map((v) => ({
       label: t(`option.availability.${v}`),
+      value: v,
+    })),
+    open_to: menuOpenToRoles.map((role) => ({
+      label: role,
+      value: role,
+    })),
+    languages: LANGUAGE_LEVEL_OPTIONS.map((v) => ({
+      label: t(`option.language.level.${v}`),
       value: v,
     })),
     contacts: menuContactType.map((c) => ({
@@ -70,7 +95,10 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
           name: personal.name,
           about: personal.about,
           availability: personal.availability ?? "AVAILABLE",
+          open_to: personal.open_to ?? [],
           skills: personal.skills,
+          priority_skills: personal.priority_skills ?? [],
+          languages: personal.languages ?? undefined,
           contacts: personal.contacts ?? undefined,
           images: personal.PersonalImage?.map((img) => ({
             url: img.url,
@@ -111,7 +139,10 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
               name: values.name,
               about: values.about,
               availability: values.availability || "AVAILABLE",
+              openTo: values.open_to || [],
               skills: values.skills || [],
+              prioritySkills: values.priority_skills || [],
+              languages: values.languages || null,
               contacts: values.contacts || null,
               imageUrls: imagesArray,
             }),
@@ -155,6 +186,26 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     void Promise.resolve().then(fetchPersonal);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Sinkronkan priority_skills: buang prioritas yang skill-nya sudah
+  // tidak dipilih lagi.
+  useEffect(() => {
+    if (!Array.isArray(selectedSkills) || selectedSkills.length === 0) {
+      const current = form.getFieldValue("priority_skills");
+      if (Array.isArray(current) && current.length > 0) {
+        form.setFieldValue("priority_skills", []);
+      }
+      return;
+    }
+    const current = form.getFieldValue("priority_skills");
+    if (Array.isArray(current) && current.length > 0) {
+      const filtered = current.filter((p) => selectedSkills.includes(p));
+      if (filtered.length !== current.length) {
+        form.setFieldValue("priority_skills", filtered);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSkills]);
 
   if (fetching) return <LoaderPage />;
 

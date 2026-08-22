@@ -19,6 +19,22 @@ export const formLayout: FormLayout[] = [
         type: "select",
         required: true,
       },
+      {
+        name: "open_to",
+        type: "select_multiple",
+        required: false,
+      },
+    ],
+  },
+  {
+    key: "languages",
+    titleKey: "personal.section.languages",
+    items: [
+      {
+        name: "languages",
+        type: "language_list",
+        isList: true,
+      },
     ],
   },
   {
@@ -40,6 +56,11 @@ export const formLayout: FormLayout[] = [
         name: "skills",
         type: "select_multiple",
         required: true,
+      },
+      {
+        name: "priority_skills",
+        type: "select_multiple",
+        required: false,
       },
     ],
   },

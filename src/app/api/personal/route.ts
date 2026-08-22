@@ -24,7 +24,10 @@ export async function POST(request: Request) {
       name: body.name,
       about: body.about,
       availability: body.availability || "AVAILABLE",
+      open_to: body.openTo || [],
       skills: body.skills || [],
+      priority_skills: body.prioritySkills || [],
+      languages: body.languages ?? undefined,
       contacts: body.contacts ?? undefined,
     };
 

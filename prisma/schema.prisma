@@ -82,7 +82,10 @@ model Personal {
   name          String
   about         String?
   availability  PersonalAvailability @default(AVAILABLE)
-  skills        String[]
+  open_to         String[]            @default([])
+  skills          String[]
+  priority_skills String[]            @default([])
+  languages       Json?
   contacts      Json?
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
