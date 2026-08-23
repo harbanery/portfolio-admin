@@ -59,7 +59,27 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
 
   // Pantau nilai skills agar opsi priority_skills hanya berisi skill
   // yang sudah dipilih (bukan seluruh master skills).
+  // Catatan: nilai watch ini HANYA untuk menghitung opsi (derived state).
+  // Sinkronisasi nilai priority_skills dilakukan lewat onValuesChange
+  // agar tidak pernah terpicu oleh form.setFieldsValue saat fetch data
+  // (penyebab nilai prioritas terhapus di production).
   const selectedSkills = Form.useWatch("skills", form) ?? [];
+
+  /**
+   * Buang prioritas yang skill-nya sudah tidak dipilih lagi.
+   * Hanya dipanggil dari onValuesChange (interaksi user), bukan dari
+   * perubahan store akibat setFieldsValue.
+   */
+  const syncPrioritySkills = (skills: string[] | undefined) => {
+    const current = form.getFieldValue("priority_skills");
+    if (!Array.isArray(current) || current.length === 0) return;
+    const next = Array.isArray(skills)
+      ? current.filter((p) => skills.includes(p))
+      : [];
+    if (next.length !== current.length) {
+      form.setFieldValue("priority_skills", next);
+    }
+  };
 
   const options = {
     skills: skillsOptions,
@@ -131,6 +151,11 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
           const values = await form.validateFields();
           const imagesArray = await getImagesArray(values.images);
 
+          // Pengaman: pastikan prioritas hanya berisi skill terpilih.
+          const prioritySkills = (values.priority_skills ?? []).filter(
+            (p) => (values.skills ?? []).includes(p),
+          );
+
           // Kirim contacts apa adanya; API menyimpan sebagai Json.
           const response = await fetch("/api/personal", {
             method: "POST",
@@ -141,7 +166,7 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
               availability: values.availability || "AVAILABLE",
               openTo: values.open_to || [],
               skills: values.skills || [],
-              prioritySkills: values.priority_skills || [],
+              prioritySkills,
               languages: values.languages || null,
               contacts: values.contacts || null,
               imageUrls: imagesArray,
@@ -187,26 +212,6 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Sinkronkan priority_skills: buang prioritas yang skill-nya sudah
-  // tidak dipilih lagi.
-  useEffect(() => {
-    if (!Array.isArray(selectedSkills) || selectedSkills.length === 0) {
-      const current = form.getFieldValue("priority_skills");
-      if (Array.isArray(current) && current.length > 0) {
-        form.setFieldValue("priority_skills", []);
-      }
-      return;
-    }
-    const current = form.getFieldValue("priority_skills");
-    if (Array.isArray(current) && current.length > 0) {
-      const filtered = current.filter((p) => selectedSkills.includes(p));
-      if (filtered.length !== current.length) {
-        form.setFieldValue("priority_skills", filtered);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedSkills]);
-
   if (fetching) return <LoaderPage />;
 
   return (
@@ -237,7 +242,16 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
 
       <Card variant="borderless" className="shadow-sm">
         <FormAdmin
-          formProps={{ form, initialValues: { availability: "AVAILABLE" } }}
+          formProps={{
+            form,
+            initialValues: { availability: "AVAILABLE" },
+            onValuesChange: (changed) => {
+              // Hanya interaksi user (deselect skill) yang memicu
+              // pembersihan priority_skills — setFieldsValue saat fetch
+              // tidak pernah masuk ke sini.
+              if ("skills" in changed) syncPrioritySkills(changed.skills);
+            },
+          }}
           layout={formLayout}
           optionList={options}
         />

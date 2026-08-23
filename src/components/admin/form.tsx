@@ -676,6 +676,7 @@ const FormAdmin = ({
       disabled={(formProps as FormProps)?.disabled}
       layout={(formProps as FormProps)?.layout ?? "vertical"}
       initialValues={(formProps as FormProps)?.initialValues}
+      onValuesChange={formProps?.onValuesChange}
     >
       {renderForm(layout)}
     </Form>
