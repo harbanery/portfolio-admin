@@ -668,15 +668,6 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                             {formatPeriod(item) && (
                               <Tag className="m-0">{formatPeriod(item)}</Tag>
                             )}
-                            <Tag
-                              color={item.is_ongoing ? "processing" : "default"}
-                            >
-                              {item.is_ongoing
-                                ? t("form.is_ongoing")
-                                : item.end_date
-                                  ? dayjs(item.end_date).format("MMM YYYY")
-                                  : "-"}
-                            </Tag>
                           </div>
                         </div>
 
