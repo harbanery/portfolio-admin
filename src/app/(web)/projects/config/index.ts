@@ -110,6 +110,11 @@ export const formLayout: FormLayout[] = [
         placeholder: "https://example.com",
       },
       {
+        name: "start_date",
+        type: "month",
+        required: false,
+      },
+      {
         name: "is_ongoing",
         type: "switch",
       },

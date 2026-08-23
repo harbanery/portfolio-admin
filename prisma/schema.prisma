@@ -132,6 +132,7 @@ model Portfolio {
   skills            String[]
   repo_links        String[]
   web_link          String?
+  start_date        DateTime?
   is_ongoing        Boolean          @default(true)
   end_date          DateTime?
   status            PortfolioStatus @default(ACTIVE)

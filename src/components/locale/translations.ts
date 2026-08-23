@@ -244,6 +244,7 @@ const id: TranslationDict = {
   "form.open_to": "Terbuka Untuk",
   "form.languages": "Bahasa",
   "form.is_ongoing": "Masih Berjalan",
+  "form.start_date": "Tanggal Dibuat/Terlibat",
   "form.end_date": "Tanggal Selesai",
   "form.category": "Kategori",
 
@@ -549,6 +550,7 @@ const en: TranslationDict = {
   "form.open_to": "Open To",
   "form.languages": "Languages",
   "form.is_ongoing": "Still Ongoing",
+  "form.start_date": "Date Created/Involved",
   "form.end_date": "End Date",
   "form.category": "Category",
 

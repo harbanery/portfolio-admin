@@ -57,6 +57,7 @@ interface ProjectItem {
   solutions?: string | null;
   story?: string | null;
   outcomes?: string[];
+  start_date?: string | null;
   is_ongoing: boolean;
   end_date?: string | null;
   order: number;
@@ -83,6 +84,7 @@ interface ProjectFormValues {
   skills?: string[];
   repo_links?: string[];
   web_link?: string | null;
+  start_date?: dayjs.Dayjs;
   is_ongoing?: boolean;
   end_date?: dayjs.Dayjs;
 }
@@ -278,6 +280,7 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       skills: values.skills,
       repoLinks: values.repo_links || [],
       webLink: values.web_link,
+      startDate: values.start_date ? values.start_date.toISOString() : null,
       isOngoing: values.is_ongoing ?? true,
       endDate: values.is_ongoing === false && values.end_date
         ? values.end_date.toISOString()
@@ -412,6 +415,18 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
     return options.role.find((r) => r.value === role)?.label || role;
   };
 
+  /** Format periode "MMM YYYY - MMM YYYY" dari tanggal dibuat/terlibat. */
+  const formatPeriod = (item: ProjectItem) => {
+    if (!item.start_date) return null;
+    const start = dayjs(item.start_date).format("MMM YYYY");
+    const end = item.is_ongoing
+      ? t("common.present")
+      : item.end_date
+        ? dayjs(item.end_date).format("MMM YYYY")
+        : "-";
+    return `${start} - ${end}`;
+  };
+
   const setDetailFields = (item: ProjectItem) => {
     /* Pastikan nilai company yang tersimpan tetap muncul di opsi select. */
     if (
@@ -454,6 +469,7 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
       skills: item.skills,
       repo_links: item.repo_links,
       web_link: item.web_link,
+      start_date: item.start_date ? dayjs(item.start_date) : undefined,
       is_ongoing: item.is_ongoing ?? true,
       end_date: item.end_date ? dayjs(item.end_date) : undefined,
     });
@@ -649,6 +665,9 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                                 ? t("common.active")
                                 : t("common.inactive")}
                             </Tag>
+                            {formatPeriod(item) && (
+                              <Tag className="m-0">{formatPeriod(item)}</Tag>
+                            )}
                             <Tag
                               color={item.is_ongoing ? "processing" : "default"}
                             >

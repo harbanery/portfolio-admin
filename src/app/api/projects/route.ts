@@ -74,6 +74,7 @@ export async function POST(request: Request) {
         skills: body.skills,
         repo_links: body.repoLinks || [],
         web_link: body.webLink,
+        start_date: body.startDate ? new Date(body.startDate) : null,
         is_ongoing: body.isOngoing ?? true,
         end_date: body.isOngoing === false && body.endDate ? new Date(body.endDate) : null,
         status: "ACTIVE",
