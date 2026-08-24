@@ -84,6 +84,7 @@ interface RenderFieldParams {
   icon?: string;
   select?: SelectProps;
   accept?: string;
+  maxLength?: number;
   uploadHint?: { hint: string; subHint: string };
   formInstance?: import("antd").FormInstance;
 }
@@ -98,6 +99,7 @@ function renderField(params: RenderFieldParams): ReactNode {
     icon,
     select,
     accept,
+    maxLength,
     uploadHint,
     formInstance,
   } = params;
@@ -123,14 +125,14 @@ function renderField(params: RenderFieldParams): ReactNode {
 
   switch (type) {
     case "input":
-      return <Input prefix={prefixNode} placeholder={tpl} disabled={disabled} />;
+      return <Input prefix={prefixNode} placeholder={tpl} disabled={disabled} maxLength={maxLength} />;
     case "number":
-      return <Input type="number" prefix={prefixNode} placeholder={tpl} disabled={disabled} />;
+      return <Input type="number" prefix={prefixNode} placeholder={tpl} disabled={disabled} maxLength={maxLength} />;
     case "password":
-      return <Input.Password prefix={prefixNode} placeholder={tpl} disabled={disabled} />;
+      return <Input.Password prefix={prefixNode} placeholder={tpl} disabled={disabled} maxLength={maxLength} />;
     case "textarea":
       return (
-        <Input.TextArea placeholder={tpl} disabled={disabled} autoSize={{ minRows: 3, maxRows: 6 }} />
+        <Input.TextArea placeholder={tpl} disabled={disabled} maxLength={maxLength} showCount={maxLength !== undefined} autoSize={{ minRows: 3, maxRows: 6 }} />
       );
     case "select":
       return (
@@ -260,7 +262,7 @@ function renderField(params: RenderFieldParams): ReactNode {
     case "switch":
       return <Switch disabled={disabled} />;
     case "editor":
-      return <Editor placeholder={tpl} disabled={disabled} />;
+      return <Editor placeholder={tpl} disabled={disabled} maxLength={maxLength} />;
     case "date":
       return <DatePicker disabled={disabled} style={{ width: "100%" }} placeholder={tpl} />;
     case "month":
@@ -470,6 +472,57 @@ const FormAdmin = ({
     [optionList, t],
   );
 
+  /** Hitung panjang teks bersih: untuk editor HTML tag diabaikan,
+      untuk input biasa panjang string dihitung langsung. */
+  const getTextLength = useCallback(
+    (item: FormLayoutItem, value: unknown): number => {
+      if (typeof value !== "string") return 0;
+      if (item.type === "editor") {
+        return value
+          .replace(/<[^>]*>/g, "")
+          .replace(/&nbsp;/g, " ")
+          .trim().length;
+      }
+      return value.length;
+    },
+    [],
+  );
+
+  /** Susun rules form: gabungkan rules custom, required, dan batas
+      maxLength (validasi teks bersih untuk field editor HTML). */
+  const buildRules = useCallback(
+    (item: FormLayoutItem, required: boolean | undefined) => {
+      const rules = [...(item.rules ?? [])];
+      if (required) {
+        rules.push({
+          required: true,
+          message: t("validation.required", {
+            field: item.label ?? t(`form.${item.name}`),
+          }),
+        });
+      }
+      if (item.maxLength !== undefined) {
+        rules.push({
+          validator: (_: unknown, value: unknown) => {
+            if (getTextLength(item, value) > item.maxLength!) {
+              return Promise.reject(
+                new Error(
+                  t("validation.maxLength", {
+                    field: item.label ?? t(`form.${item.name}`),
+                    max: item.maxLength!,
+                  }),
+                ),
+              );
+            }
+            return Promise.resolve();
+          },
+        });
+      }
+      return rules.length > 0 ? rules : undefined;
+    },
+    [t, getTextLength],
+  );
+
   /** Render item form standar (dipakai langsung atau dalam wrapper kondisional). */
   const renderStandardField = useCallback(
     (item: FormLayoutItem) => (
@@ -478,19 +531,7 @@ const FormAdmin = ({
         label={item.label ?? t(`form.${item.name}`)}
         /* Switch menggunakan prop `checked`, bukan `value`. */
         valuePropName={item.type === "switch" ? "checked" : undefined}
-        rules={
-          item.required
-            ? [
-                ...(item.rules ?? []),
-                {
-                  required: true,
-                  message: t("validation.required", {
-                    field: item.label ?? t(`form.${item.name}`),
-                  }),
-                },
-              ]
-            : item.rules
-        }
+        rules={buildRules(item, item.required)}
       >
         {renderField({
           type: item.type,
@@ -499,6 +540,7 @@ const FormAdmin = ({
           icon: item.icon,
           disabled: (formProps as FormProps)?.disabled || item.disabled,
           select: { options: optionList?.[item.name] },
+          maxLength: item.maxLength,
           uploadHint: {
             hint: t("upload.hint"),
             subHint: t("upload.subHint"),
@@ -507,7 +549,7 @@ const FormAdmin = ({
         })}
       </Form.Item>
     ),
-    [t, optionList, formProps],
+    [t, optionList, formProps, buildRules],
   );
 
   const renderForm = (formLayout: FormLayout[]) =>
@@ -544,14 +586,7 @@ const FormAdmin = ({
                             <Form.Item
                               {...restField}
                               name={name}
-                              rules={[
-                                {
-                                  required: item.required,
-                                  message: t("validation.required", {
-                                    field: item.label ?? t(`form.${item.name}`),
-                                  }),
-                                },
-                              ]}
+                              rules={buildRules(item, item.required)}
                               className="!mb-0 flex-1"
                             >
                               {renderField({
@@ -560,6 +595,7 @@ const FormAdmin = ({
                                 icon: item.icon,
                                 disabled: item.disabled,
                                 select: { options: optionList?.[item.name] },
+                                maxLength: item.maxLength,
                               })}
                             </Form.Item>
                             <Button

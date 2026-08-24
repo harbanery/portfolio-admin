@@ -33,6 +33,8 @@ export type FormLayoutItem = {
   isList?: boolean;
   multiple?: boolean;
   accept?: string;
+  /** Batas jumlah karakter (dipakai input, textarea, dan editor). */
+  maxLength?: number;
   dependencies?: string[];
   /**
    * Sembunyikan field secara kondisional.

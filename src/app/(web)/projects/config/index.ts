@@ -52,6 +52,7 @@ export const formLayout: FormLayout[] = [
         name: "description",
         type: "editor",
         required: false,
+        maxLength: 225,
       },
       {
         name: "api_documentation",

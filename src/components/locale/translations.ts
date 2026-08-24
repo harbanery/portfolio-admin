@@ -58,6 +58,7 @@ const id: TranslationDict = {
 
   // Validation & notification
   "validation.required": "{field} wajib diisi.",
+  "validation.maxLength": "{field} maksimal {max} karakter.",
   "notif.success": "Berhasil",
   "notif.error": "Gagal",
   "notif.validationError": "Validasi Gagal",
@@ -365,6 +366,7 @@ const en: TranslationDict = {
 
   // Validation & notification
   "validation.required": "{field} is required.",
+  "validation.maxLength": "{field} must be at most {max} characters.",
   "notif.success": "Success",
   "notif.error": "Error",
   "notif.validationError": "Validation Error",
