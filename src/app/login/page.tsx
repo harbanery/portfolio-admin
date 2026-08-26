@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Form, Input, Typography, App as AntdApp } from "antd";
-import { LockOutlined, MailOutlined, SafetyOutlined } from "@ant-design/icons";
+import { LockOutlined, MailOutlined } from "@ant-design/icons";
 import { useLocale } from "@/components/locale/LocaleProvider";
+import Image from "next/image";
 
 /** Halaman login admin: password tunggal + sesi 12 jam (cookie httpOnly). */
 export default function LoginPage() {
@@ -40,7 +41,9 @@ export default function LoginPage() {
       // Petakan kode error dari API ke pesan terjemahan.
       switch (result.code) {
         case "BLOCKED":
-          message.error(t("auth.errBlocked", { minutes: result.minutes ?? 15 }));
+          message.error(
+            t("auth.errBlocked", { minutes: result.minutes ?? 15 }),
+          );
           break;
         case "NO_ADMIN":
           message.warning(t("auth.errNoAdmin"));
@@ -107,9 +110,17 @@ export default function LoginPage() {
         <div className="flex flex-col items-center text-center mb-6">
           <div
             className="flex items-center justify-center w-14 h-14 rounded-full mb-4"
-            style={{ backgroundColor: "#4f46e5", color: "#fff" }}
+            style={{ backgroundColor: "#000000", color: "#fff" }}
           >
-            <SafetyOutlined style={{ fontSize: 26 }} />
+            <Image
+              src="/logo.png"
+              alt="Logo"
+              priority
+              width={50}
+              height={50}
+              className="object-contain"
+            />
+            {/* </div> */}
           </div>
           <Typography.Title level={3} style={{ marginBottom: 4 }}>
             {t("auth.title")}
@@ -130,7 +141,12 @@ export default function LoginPage() {
             name="password"
             label={t("auth.password")}
             rules={[
-              { required: true, message: t("validation.required", { field: t("auth.password") }) },
+              {
+                required: true,
+                message: t("validation.required", {
+                  field: t("auth.password"),
+                }),
+              },
             ]}
           >
             <Input.Password

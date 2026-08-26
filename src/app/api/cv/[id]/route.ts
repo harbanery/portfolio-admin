@@ -1,5 +1,6 @@
 import prisma from "@/server/db";
 import { requireAuth } from "@/server/auth";
+import { deleteCloudinaryUrls } from "@/server/cloudinary";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -48,6 +49,12 @@ export async function PUT(
     if (body.isPrimary) {
       await prisma.cv.updateMany({ data: { is_primary: false } });
     }
+
+    // Rekaman lama untuk membersihkan file Cloudinary yang diganti.
+    const existing = await prisma.cv.findUnique({
+      where: { id: Number(id) },
+    });
+
     const cv = await prisma.cv.update({
       where: { id: Number(id) },
       data: {
@@ -59,6 +66,12 @@ export async function PUT(
         is_primary: body.isPrimary ?? false,
       },
     });
+
+    // Hapus file lama di Cloudinary bila diganti dengan file lain.
+    if (existing?.file_url && existing.file_url !== cv.file_url) {
+      await deleteCloudinaryUrls([existing.file_url]);
+    }
+
     return NextResponse.json({ success: true, data: cv });
   } catch (error) {
     console.error("Error updating cv:", error);
@@ -122,7 +135,14 @@ export async function DELETE(
   }
   try {
     const { id } = await params;
+    const cv = await prisma.cv.findUnique({ where: { id: Number(id) } });
     await prisma.cv.delete({ where: { id: Number(id) } });
+
+    // Hapus juga file terkait di Cloudinary (hindari aset yatim).
+    if (cv?.file_url) {
+      await deleteCloudinaryUrls([cv.file_url]);
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting cv:", error);

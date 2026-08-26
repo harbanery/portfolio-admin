@@ -254,6 +254,7 @@ const PersonalDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
           }}
           layout={formLayout}
           optionList={options}
+          uploadFolder="personal"
         />
       </Card>
     </section>

@@ -1,5 +1,6 @@
 import prisma from "@/server/db";
 import { requireAuth } from "@/server/auth";
+import { deleteCloudinaryUrls } from "@/server/cloudinary";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -46,6 +47,12 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
+
+    // Rekaman lama untuk membersihkan file Cloudinary yang diganti.
+    const existing = await prisma.certification.findUnique({
+      where: { id: Number(id) },
+    });
+
     const certification = await prisma.certification.update({
       where: { id: Number(id) },
       data: {
@@ -61,6 +68,12 @@ export async function PUT(
         skills: body.skills || [],
       },
     });
+
+    // Hapus file lama di Cloudinary bila diganti dengan file lain.
+    if (existing?.file_url && existing.file_url !== certification.file_url) {
+      await deleteCloudinaryUrls([existing.file_url]);
+    }
+
     return NextResponse.json({ success: true, data: certification });
   } catch (error) {
     console.error("Error updating certification:", error);
@@ -110,7 +123,16 @@ export async function DELETE(
   }
   try {
     const { id } = await params;
+    const certification = await prisma.certification.findUnique({
+      where: { id: Number(id) },
+    });
     await prisma.certification.delete({ where: { id: Number(id) } });
+
+    // Hapus juga file terkait di Cloudinary (hindari aset yatim).
+    if (certification?.file_url) {
+      await deleteCloudinaryUrls([certification.file_url]);
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting certification:", error);

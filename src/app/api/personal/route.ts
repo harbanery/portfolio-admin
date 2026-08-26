@@ -1,5 +1,6 @@
 import prisma from "@/server/db";
 import { requireAuth } from "@/server/auth";
+import { deleteCloudinaryUrls } from "@/server/cloudinary";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -58,12 +59,21 @@ export async function POST(request: Request) {
       });
 
       // Sinkronisasi gambar: hapus yang tidak ada lagi, tambah yang baru.
+      const removedImages = updated.PersonalImage.filter(
+        (img) => !imageUrls.includes(img.url),
+      );
       await prisma.personalImage.deleteMany({
         where: {
           personalId: updated.id,
           url: { notIn: imageUrls },
         },
       });
+
+      // Hapus juga aset gambar yang dibuang dari Cloudinary
+      // (hindari aset yatim setelah dihapus dari profil).
+      if (removedImages.length > 0) {
+        await deleteCloudinaryUrls(removedImages.map((img) => img.url));
+      }
       const existingUrls = updated.PersonalImage.map((img) => img.url);
       const newUrls = imageUrls.filter((url) => !existingUrls.includes(url));
       if (newUrls.length > 0) {

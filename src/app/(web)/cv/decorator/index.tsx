@@ -473,7 +473,7 @@ const CvDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         width={600}
         {...modalBodyProps()}
       >
-        <FormAdmin formProps={{ form }} layout={formLayout} />
+        <FormAdmin formProps={{ form }} layout={formLayout} uploadFolder="cv" />
       </Modal>
     </section>
   );

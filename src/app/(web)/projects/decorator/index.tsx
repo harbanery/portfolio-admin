@@ -760,6 +760,7 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
           }}
           layout={formLayout}
           optionList={options}
+          uploadFolder="projects"
         />
       </Modal>
 
@@ -779,6 +780,7 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
           layout={formLayout}
           optionList={options}
           formValue={dataDetail}
+          uploadFolder="projects"
         />
       </Modal>
     </section>

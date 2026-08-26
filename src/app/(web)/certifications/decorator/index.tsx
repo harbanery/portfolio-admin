@@ -654,6 +654,7 @@ const CertificationDecorator = ({
             initialValues: { category: DEFAULT_CATEGORY },
           }}
           layout={formLayout}
+          uploadFolder="certifications"
           optionList={{
             skills: skillsOptions,
             category: CATEGORY_OPTIONS.map((c) => ({

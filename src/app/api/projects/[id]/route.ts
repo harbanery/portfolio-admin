@@ -1,5 +1,6 @@
 import prisma from "@/server/db";
 import { requireAuth } from "@/server/auth";
+import { deleteCloudinaryUrls } from "@/server/cloudinary";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -44,6 +45,13 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
+
+    // Rekaman lama dipakai untuk membersihkan aset Cloudinary yang
+    // tidak direferensikan lagi setelah update (diganti/dibuang).
+    const existing = await prisma.portfolio.findUnique({
+      where: { id: Number(id) },
+    });
+
     const project = await prisma.portfolio.update({
       where: { id: Number(id) },
       data: {
@@ -71,6 +79,23 @@ export async function PUT(
         end_date: body.isOngoing === false && body.endDate ? new Date(body.endDate) : null,
       },
     });
+
+    // Hapus aset Cloudinary lama yang hilang setelah update
+    // (mirror semantik update: field kosong mempertahankan nilai lama).
+    if (existing) {
+      const finalImage = body.image || existing.image;
+      const finalImages = body.images || existing.images;
+      const kept = new Set(
+        [finalImage, ...finalImages].filter(Boolean) as string[],
+      );
+      const removed = [existing.image, ...(existing.images ?? [])].filter(
+        (url) => url && !kept.has(url),
+      );
+      if (removed.length > 0) {
+        await deleteCloudinaryUrls(removed);
+      }
+    }
+
     return NextResponse.json({ success: true, data: project });
   } catch (error) {
     console.error("Error updating project:", error);
@@ -120,7 +145,17 @@ export async function DELETE(
   }
   try {
     const { id } = await params;
+    const project = await prisma.portfolio.findUnique({
+      where: { id: Number(id) },
+    });
     await prisma.portfolio.delete({ where: { id: Number(id) } });
+
+    // Hapus juga aset gambar terkait di Cloudinary agar tidak menjadi
+    // aset yatim (orphan) setelah record dihapus.
+    if (project) {
+      await deleteCloudinaryUrls([project.image, ...(project.images ?? [])]);
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting project:", error);

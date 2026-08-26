@@ -466,6 +466,7 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
         <FormAdmin
           formProps={{ form, initialValues: { employment_type: DEFAULT_EMPLOYMENT_TYPE } }}
           layout={formLayout}
+          uploadFolder="experiences"
           optionList={{
             employment_type: EMPLOYMENT_TYPE_OPTIONS.map((type) => ({
               label: t(`option.employment.type.${type}`),
@@ -490,6 +491,7 @@ const ExperienceDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
           formProps={{ form: detailForm }}
           layout={formLayout}
           formValue={dataDetail}
+          uploadFolder="experiences"
           optionList={{
             employment_type: EMPLOYMENT_TYPE_OPTIONS.map((type) => ({
               label: t(`option.employment.type.${type}`),

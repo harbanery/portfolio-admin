@@ -71,6 +71,37 @@ function getStoragePath(file: unknown): string | null {
   return f.storagePath ?? f.response?.data?.storagePath ?? null;
 }
 
+/**
+ * Hapus aset di Cloudinary via DELETE /api/upload. Memakai storagePath
+ * (public_id) bila ada; bila tidak (mis. file lama saat edit yang hanya
+ * menyimpan URL), fallback ke parameter `url` yang dikonversi server
+ * menjadi public_id.
+ */
+async function deleteUploadAsset(file: unknown): Promise<void> {
+  if (!file || typeof file !== "object") return;
+  const f = file as UploadFileLike;
+  const path = getStoragePath(file);
+  const url = f.url ?? f.response?.data?.url ?? null;
+
+  const params = new URLSearchParams();
+  if (path) params.set("path", path);
+  else if (url) params.set("url", url);
+  else return;
+
+  try {
+    await fetch(`/api/upload?${params.toString()}`, { method: "DELETE" });
+  } catch (e) {
+    console.error("Error deleting asset from Cloudinary:", e);
+  }
+}
+
+/**
+ * Stash file lama per field, diisi saat beforeUpload (sebelum nilai form
+ * berganti) dan dipakai saat upload baru selesai untuk menghapus aset
+ * lama yang diganti (upload maxCount=1 tidak memicu onRemove).
+ */
+const replacedUploadFiles = new Map<string, UploadFileLike>();
+
 /* ------------------------------------------------------------------ */
 /*  Field render helper – returns JSX, NOT a component                  */
 /* ------------------------------------------------------------------ */
@@ -87,6 +118,7 @@ interface RenderFieldParams {
   maxLength?: number;
   uploadHint?: { hint: string; subHint: string };
   formInstance?: import("antd").FormInstance;
+  uploadFolder?: string;
 }
 
 function renderField(params: RenderFieldParams): ReactNode {
@@ -102,6 +134,7 @@ function renderField(params: RenderFieldParams): ReactNode {
     maxLength,
     uploadHint,
     formInstance,
+    uploadFolder,
   } = params;
 
   let tpl: string | undefined;
@@ -159,28 +192,30 @@ function renderField(params: RenderFieldParams): ReactNode {
           accept={accept ?? "image/*"}
           listType="picture"
           action="/api/upload"
+          data={{ folder: uploadFolder ?? "misc" }}
           beforeUpload={(file) => {
             if (file.size > 2 * 1024 * 1024) return false;
+            // Simpan file lama sebelum diganti (untuk hapus aset lama).
+            const prev = formInstance?.getFieldValue(name);
+            const prevFile = Array.isArray(prev) ? prev[0] : null;
+            if (prevFile) replacedUploadFiles.set(String(name), prevFile);
             return true;
           }}
           onChange={(info) => {
             if (info.file.status === "done" && info.file.response?.success) {
               const url = info.file.response.data.url;
               const storagePath = info.file.response.data.storagePath;
+              // Hapus aset lama yang baru saja diganti (bila ada).
+              const replaced = replacedUploadFiles.get(String(name));
+              replacedUploadFiles.delete(String(name));
+              if (replaced) void deleteUploadAsset(replaced);
               formInstance?.setFieldValue(name, [
                 { uid: info.file.uid, name: info.file.name, status: "done", url, storagePath },
               ]);
             }
           }}
           onRemove={async (file) => {
-            const path = getStoragePath(file);
-            if (path) {
-              try {
-                await fetch(`/api/upload?path=${encodeURIComponent(path)}`, { method: "DELETE" });
-              } catch (e) {
-                console.error("Error deleting image:", e);
-              }
-            }
+            await deleteUploadAsset(file);
           }}
         >
           {value && typeof value === "string" ? (
@@ -203,28 +238,30 @@ function renderField(params: RenderFieldParams): ReactNode {
           maxCount={1}
           accept={accept ?? ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
           action="/api/upload"
+          data={{ folder: uploadFolder ?? "misc" }}
           beforeUpload={(file) => {
             if (file.size > 10 * 1024 * 1024) return false;
+            // Simpan file lama sebelum diganti (untuk hapus aset lama).
+            const prev = formInstance?.getFieldValue(name);
+            const prevFile = Array.isArray(prev) ? prev[0] : null;
+            if (prevFile) replacedUploadFiles.set(String(name), prevFile);
             return true;
           }}
           onChange={(info) => {
             if (info.file.status === "done" && info.file.response?.success) {
               const url = info.file.response.data.url;
               const storagePath = info.file.response.data.storagePath;
+              // Hapus aset lama yang baru saja diganti (bila ada).
+              const replaced = replacedUploadFiles.get(String(name));
+              replacedUploadFiles.delete(String(name));
+              if (replaced) void deleteUploadAsset(replaced);
               formInstance?.setFieldValue(name, [
                 { uid: info.file.uid, name: info.file.name, status: "done", url, storagePath },
               ]);
             }
           }}
           onRemove={async (file) => {
-            const path = getStoragePath(file);
-            if (path) {
-              try {
-                await fetch(`/api/upload?path=${encodeURIComponent(path)}`, { method: "DELETE" });
-              } catch (e) {
-                console.error("Error deleting file:", e);
-              }
-            }
+            await deleteUploadAsset(file);
           }}
         >
           <p className="ant-upload-drag-icon"><InboxOutlined /></p>
@@ -241,19 +278,13 @@ function renderField(params: RenderFieldParams): ReactNode {
           listType="picture-card"
           accept="image/*"
           action="/api/upload"
+          data={{ folder: uploadFolder ?? "misc" }}
           beforeUpload={(file) => {
             if (file.size > 2 * 1024 * 1024) return false;
             return true;
           }}
           onRemove={async (file) => {
-            const path = getStoragePath(file);
-            if (path) {
-              try {
-                await fetch(`/api/upload?path=${encodeURIComponent(path)}`, { method: "DELETE" });
-              } catch (e) {
-                console.error("Error deleting image:", e);
-              }
-            }
+            await deleteUploadAsset(file);
           }}
         >
           <div><PlusOutlined /></div>
@@ -284,6 +315,7 @@ const FormAdmin = ({
   optionList,
   formProps,
   customComponent,
+  uploadFolder,
 }: FormAdminProps) => {
   const { t } = useLocale();
   /* State hanya untuk memicu re-render setelah ikon selesai dimuat. */
@@ -657,6 +689,8 @@ const FormAdmin = ({
                           isFileUpload ? "upload.fileSubHint" : "upload.subHint",
                         ),
                       },
+                      formInstance: (formProps as FormProps)?.form,
+                      uploadFolder,
                     })}
                   </Form.Item>
                 );

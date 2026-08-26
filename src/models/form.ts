@@ -10,6 +10,8 @@ export interface FormAdminProps {
   optionList?: Record<string, DefaultOptionType[]>;
   formValue?: unknown;
   customComponent?: Record<string, ReactNode>;
+  /** Subfolder menu di Cloudinary (mis. "projects" → admin-portfolio/projects). */
+  uploadFolder?: string;
 }
 
 export type FormLayout = {

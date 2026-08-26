@@ -1,20 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "node:crypto";
 import { requireAuth } from "@/server/auth";
-
-function generateUploadSignature(
-  params: Record<string, string | number>,
-  apiSecret: string,
-): string {
-  const sortedParams = Object.keys(params)
-    .sort((a, b) => a.localeCompare(b))
-    .map((key) => `${key}=${params[key]}`)
-    .join("&");
-  return crypto
-    .createHash("sha1")
-    .update(sortedParams + apiSecret)
-    .digest("hex");
-}
+import {
+  destroyCloudinaryAsset,
+  publicIdFromUrl,
+  resolveUploadFolder,
+  signCloudinaryParams,
+} from "@/server/cloudinary";
 
 export async function POST(request: NextRequest) {
   if (!(await requireAuth())) {
@@ -40,8 +31,21 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
+    // Subfolder per menu (mis. "projects" → admin-portfolio/projects)
+    // dikirim client via field "folder" pada FormData.
+    const folder = resolveUploadFolder(data.get("folder") as string | null);
+    if (!folder) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Invalid upload folder. Send a 'folder' field matching the target menu (e.g. projects, experiences, certifications, cv, personal).",
+        },
+        { status: 400 },
+      );
+    }
+
     const timestamp = Date.now();
-    const folder = "admin-portfolio";
     const filename = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
 
     const isImage = file.type.startsWith("image/");
@@ -70,7 +74,7 @@ export async function POST(request: NextRequest) {
       folder: folder,
     };
 
-    const signature = generateUploadSignature(
+    const signature = signCloudinaryParams(
       params,
       process.env.CLOUDINARY_API_SECRET || "",
     );
@@ -139,54 +143,24 @@ export async function DELETE(request: NextRequest) {
   }
   try {
     const { searchParams } = new URL(request.url);
-    const publicId = searchParams.get("path");
+
+    // Identitas aset: public_id langsung (`path`) atau URL delivery
+    // (`url`) yang dikonversi menjadi public_id di sisi server.
+    const pathParam = searchParams.get("path");
+    const urlParam = searchParams.get("url");
+    const publicId =
+      pathParam ?? (urlParam ? publicIdFromUrl(urlParam) : null);
 
     if (!publicId) {
       return NextResponse.json(
-        { success: false, error: "Missing public ID" },
+        { success: false, error: "Missing or invalid asset identifier" },
         { status: 400 },
       );
     }
 
-    const destroy = async (resourceType: "image" | "raw") => {
-      const deleteTimestamp = Math.floor(Date.now() / 1000);
-      const params = {
-        timestamp: deleteTimestamp,
-        public_id: publicId,
-      };
-
-      const signature = generateUploadSignature(
-        params,
-        process.env.CLOUDINARY_API_SECRET || "",
-      );
-
-      return fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/${resourceType}/destroy`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            public_id: publicId,
-            api_key: process.env.CLOUDINARY_API_KEY,
-            timestamp: deleteTimestamp,
-            signature: signature,
-          }),
-        },
-      );
-    };
-
-    // Coba hapus sebagai image terlebih dahulu; jika tidak ditemukan,
-    // coba sebagai raw (file dokumen seperti PDF/DOCX).
-    let cloudinaryResponse = await destroy("image");
-    if (!cloudinaryResponse.ok) {
-      cloudinaryResponse = await destroy("raw");
-    }
-
-    if (!cloudinaryResponse.ok) {
-      const errorData = await cloudinaryResponse.json();
-      throw new Error(errorData.error?.message || "Cloudinary delete failed");
+    const deleted = await destroyCloudinaryAsset(publicId);
+    if (!deleted) {
+      throw new Error("Cloudinary delete failed");
     }
 
     return NextResponse.json({
