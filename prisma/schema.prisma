@@ -15,26 +15,6 @@ model Admin {
   updatedAt DateTime @updatedAt
 }
 
-model ChecklistItems {
-  id           Int          @id @default(autoincrement())
-  itemKey      String
-  done         Boolean      @default(false)
-  entryDate    String
-  DailyEntries DailyEntries @relation(fields: [entryDate], references: [date], onDelete: Cascade)
-
-  @@unique([entryDate, itemKey])
-  @@index([entryDate])
-}
-
-model DailyEntries {
-  date           String           @id @unique
-  reflection     String           @default("")
-  mood           Int              @default(0)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  ChecklistItems ChecklistItems[]
-}
-
 enum EmploymentType {
   FULL_TIME
   PART_TIME

@@ -5,7 +5,8 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row justify-center items-center gap-4">
           <p className="text-sm font-neue-haas text-gray-300 text-center font-light tracking-wider">
             © 2026 Raihan Yusuf — Built with{" "}
-            <b className="font-normal text-white">Next.js</b> &{" "}
+            <b className="font-normal text-white">Next.js</b>,{" "}
+            <b className="font-normal text-white">Ant Design</b> &{" "}
             <b className="font-normal text-white">Tailwind CSS</b>, deployed on{" "}
             <b className="font-normal text-white">Vercel</b> — All rights
             reserved
