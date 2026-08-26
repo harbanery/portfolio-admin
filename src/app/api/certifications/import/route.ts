@@ -1,4 +1,5 @@
 import prisma from "@/server/db";
+import { requireAuth } from "@/server/auth";
 import { NextResponse } from "next/server";
 
 /** Konversi nilai XLS (unknown) ke tipe yang dibutuhkan Prisma. */
@@ -60,6 +61,12 @@ const asCategory = (value: unknown): CertificationCategory => {
  * Menerima array item dan membuat banyak record sekaligus.
  */
 export async function POST(request: Request) {
+  if (!(await requireAuth())) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 },
+    );
+  }
   try {
     const body = await request.json();
     const items: Array<Record<string, unknown>> = Array.isArray(body.items)

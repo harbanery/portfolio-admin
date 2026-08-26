@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/server/auth";
 
 /**
  * Proxy delivery file Cloudinary.
@@ -32,6 +33,12 @@ function sanitizeFilename(name: string): string {
 }
 
 export async function GET(request: NextRequest) {
+  if (!(await requireAuth())) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 },
+    );
+  }
   const { searchParams } = new URL(request.url);
   const target = searchParams.get("url");
   const forceDownload = searchParams.get("download") === "1";

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
+import { requireAuth } from "@/server/auth";
 
 function generateUploadSignature(
   params: Record<string, string | number>,
@@ -16,6 +17,12 @@ function generateUploadSignature(
 }
 
 export async function POST(request: NextRequest) {
+  if (!(await requireAuth())) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 },
+    );
+  }
   try {
     const data = await request.formData();
     const file: File | null = (data.get("image") ||
@@ -124,6 +131,12 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  if (!(await requireAuth())) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 },
+    );
+  }
   try {
     const { searchParams } = new URL(request.url);
     const publicId = searchParams.get("path");

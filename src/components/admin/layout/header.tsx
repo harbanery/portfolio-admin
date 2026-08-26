@@ -1,8 +1,9 @@
 "use client";
 
-import { Breadcrumb, Button, Grid, Layout, Space } from "antd";
-import { MenuOutlined } from "@ant-design/icons";
-import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { Breadcrumb, Button, Grid, Layout, Space, App as AntdApp } from "antd";
+import { LogoutOutlined, MenuOutlined } from "@ant-design/icons";
+import { usePathname, useRouter } from "next/navigation";
 import { loadAntdIcon } from "@/components/custom/icon";
 import { menuAdminConfig } from "@/helpers/menu";
 import ThemeToggle from "@/components/theme/ThemeToggle";
@@ -19,6 +20,22 @@ const HeaderLayout: React.FC<{
   const { t } = useLocale();
   const { mode, hydrated } = useThemeMode();
   const pathname = usePathname();
+  const router = useRouter();
+  const { message } = AntdApp.useApp();
+
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.replace("/login");
+      router.refresh();
+    } catch {
+      message.error(t("auth.logoutFailed"));
+      setLoggingOut(false);
+    }
+  };
 
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
@@ -74,6 +91,14 @@ const HeaderLayout: React.FC<{
         <LanguageToggle />
         <ThemeToggle />
         <RealtimeClock />
+        <Button
+          type="text"
+          icon={<LogoutOutlined />}
+          onClick={handleLogout}
+          loading={loggingOut}
+          aria-label={t("auth.logout")}
+          title={t("auth.logout")}
+        />
       </Space>
     </Header>
   );

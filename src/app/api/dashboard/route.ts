@@ -1,7 +1,14 @@
 import prisma from "@/server/db";
+import { requireAuth } from "@/server/auth";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+  if (!(await requireAuth())) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 },
+    );
+  }
   try {
     // Summary card dashboard: hanya jumlah data berstatus ACTIVE.
     const [

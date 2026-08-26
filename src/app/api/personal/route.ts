@@ -1,7 +1,14 @@
 import prisma from "@/server/db";
+import { requireAuth } from "@/server/auth";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+  if (!(await requireAuth())) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 },
+    );
+  }
   try {
     const personal = await prisma.personal.findFirst({
       include: { PersonalImage: { orderBy: { order: "asc" } } },
@@ -17,6 +24,12 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (!(await requireAuth())) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 },
+    );
+  }
   try {
     const body = await request.json();
 

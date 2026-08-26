@@ -1,7 +1,14 @@
 import prisma from "@/server/db";
+import { requireAuth } from "@/server/auth";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+  if (!(await requireAuth())) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 },
+    );
+  }
   try {
     const experiences = await prisma.experience.findMany({
       orderBy: { start_date: "desc" },
@@ -17,6 +24,12 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (!(await requireAuth())) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 },
+    );
+  }
   try {
     const body = await request.json();
     const experience = await prisma.experience.create({

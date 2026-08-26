@@ -1,9 +1,16 @@
 import prisma from "@/server/db";
+import { requireAuth } from "@/server/auth";
 import { NextResponse } from "next/server";
 
 export type ProjectStatus = "ACTIVE" | "NONACTIVE";
 
 export async function GET() {
+  if (!(await requireAuth())) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 },
+    );
+  }
   try {
     const projects = await prisma.portfolio.findMany({
       orderBy: [{ order: "asc" }, { createdAt: "desc" }],
@@ -20,6 +27,12 @@ export async function GET() {
 
 /** Reorder batch: terima array of { id, order } lalu update satu per satu. */
 export async function PUT(request: Request) {
+  if (!(await requireAuth())) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 },
+    );
+  }
   try {
     const body = await request.json();
     const items: Array<{ id: number; order: number }> = body.items || [];
@@ -51,6 +64,12 @@ export async function PUT(request: Request) {
 }
 
 export async function POST(request: Request) {
+  if (!(await requireAuth())) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 },
+    );
+  }
   try {
     const body = await request.json();
     const project = await prisma.portfolio.create({

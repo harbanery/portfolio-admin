@@ -91,6 +91,31 @@ const id: TranslationDict = {
   "menu.publications": "Publications",
   "menu.cv": "CV",
 
+  // Auth & login
+  "auth.title": "Login Admin",
+  "auth.subtitle": "Masuk untuk mengelola portfolio Anda",
+  "auth.password": "Password",
+  "auth.passwordPlaceholder": "Masukkan password",
+  "auth.signIn": "Masuk",
+  "auth.devGenerate": "Generate & Kirim Password Baru",
+  "auth.devGenerateDesc":
+    "Lupa password? Password lama akan dihapus dan password baru dikirim ke email Anda. Hanya tersedia di mode development.",
+  "auth.errInvalid": "Password salah.",
+  "auth.errNoAdmin":
+    "Belum ada password aktif. Gunakan tombol generate password terlebih dahulu.",
+  "auth.errAttempts": "Password salah. Sisa {count} percobaan sebelum diblokir.",
+  "auth.errBlocked":
+    "Terlalu banyak percobaan gagal. Coba lagi dalam {minutes} menit.",
+  "auth.errCooldown": "Tunggu {seconds} detik sebelum generate ulang.",
+  "auth.errSmtp":
+    "SMTP belum dikonfigurasi. Isi SMTP_HOST, SMTP_USER, SMTP_PASS, dan NOTIFICATION_EMAIL_TO di .env.development.",
+  "auth.errSend": "Gagal mengirim email. Coba lagi.",
+  "auth.okSent": "Password baru sudah dikirim ke email Anda.",
+  "auth.okLogin": "Berhasil masuk. Mengalihkan...",
+  "auth.logout": "Keluar",
+  "auth.logoutFailed": "Gagal keluar. Coba lagi.",
+  "auth.sessionExpired": "Sesi Anda telah berakhir. Silakan login kembali.",
+
   // Header & footer
   "header.toggleSider": "Tampilkan/sembunyikan menu",
   "footer.copyright": "© {year} Admin Portfolio. Semua hak dilindungi.",
@@ -398,6 +423,31 @@ const en: TranslationDict = {
   "menu.educations": "Educations",
   "menu.publications": "Publications",
   "menu.cv": "CV",
+
+  // Auth & login
+  "auth.title": "Admin Login",
+  "auth.subtitle": "Sign in to manage your portfolio",
+  "auth.password": "Password",
+  "auth.passwordPlaceholder": "Enter your password",
+  "auth.signIn": "Sign In",
+  "auth.devGenerate": "Generate & Send New Password",
+  "auth.devGenerateDesc":
+    "Forgot your password? The old password will be deleted and a new one sent to your email. Only available in development mode.",
+  "auth.errInvalid": "Invalid password.",
+  "auth.errNoAdmin":
+    "No active password yet. Use the generate password button first.",
+  "auth.errAttempts": "Invalid password. {count} attempts remaining before lockdown.",
+  "auth.errBlocked":
+    "Too many failed attempts. Try again in {minutes} minutes.",
+  "auth.errCooldown": "Wait {seconds} seconds before generating again.",
+  "auth.errSmtp":
+    "SMTP is not configured. Fill SMTP_HOST, SMTP_USER, SMTP_PASS, and NOTIFICATION_EMAIL_TO in .env.development.",
+  "auth.errSend": "Failed to send email. Try again.",
+  "auth.okSent": "The new password has been sent to your email.",
+  "auth.okLogin": "Signed in successfully. Redirecting...",
+  "auth.logout": "Log out",
+  "auth.logoutFailed": "Failed to log out. Try again.",
+  "auth.sessionExpired": "Your session has ended. Please sign in again.",
 
   // Header & footer
   "header.toggleSider": "Toggle menu",
