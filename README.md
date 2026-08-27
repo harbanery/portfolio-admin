@@ -60,7 +60,7 @@ When I started building my portfolio, the original plan was to combine the portf
 - **Excel import** (SheetJS) with template download for bulk data entry.
 - **Drag-and-drop reordering** (dnd-kit) for projects and similar ordered content.
 - **Bilingual UI** (Indonesian/English) with a runtime language toggle, plus light/dark theme switching.
-- **PWA manifest** with android/iOS icons, and analytics via Vercel Analytics.
+- **Analytics** with Vercel Analytics.
 - **Linting** with **ESLint** for maintaining code quality.
 
 ### Project Structure

@@ -11,12 +11,6 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
         ],
       },
-      {
-        source: "/manifest.webmanifest",
-        headers: [
-          { key: "Content-Type", value: "application/manifest+json" },
-        ],
-      },
     ];
   },
 };

@@ -54,6 +54,6 @@ export const config = {
      * Jalankan proxy untuk semua path KECUALI aset statis:
      * _next/static, _next/image, file publik (favicon, ikon, gambar, svg).
      */
-    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|ios|android|images|references|file.svg|globe.svg|next.svg|vercel.svg|window.svg|logo.png|logo.jpg).*)",
+    "/((?!_next/static|_next/image|favicon.ico|ios|android|images|references|file.svg|globe.svg|next.svg|vercel.svg|window.svg|logo.png|logo.jpg).*)",
   ],
 };
