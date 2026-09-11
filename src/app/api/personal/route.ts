@@ -1,6 +1,7 @@
 import prisma from "@/server/db";
 import { requireAuth } from "@/server/auth";
 import { deleteCloudinaryUrls } from "@/server/cloudinary";
+import { sanitizeRichText } from "@/server/sanitize";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -36,7 +37,8 @@ export async function POST(request: Request) {
 
     const data = {
       name: body.name,
-      about: body.about,
+      // "about" berasal dari rich text editor → sanitasi anti XSS.
+      about: sanitizeRichText(body.about),
       availability: body.availability || "AVAILABLE",
       open_to: body.openTo || [],
       skills: body.skills || [],

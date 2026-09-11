@@ -1,5 +1,6 @@
 import prisma from "@/server/db";
 import { requireAuth } from "@/server/auth";
+import { sanitizeRichText } from "@/server/sanitize";
 import { NextResponse } from "next/server";
 
 export type ProjectStatus = "ACTIVE" | "NONACTIVE";
@@ -82,13 +83,14 @@ export async function POST(request: Request) {
         role: body.role,
         image: body.image || "",
         images: body.images || [],
-        description: body.description,
+        // Field rich text (editor Quill) disanitasi di server (anti XSS).
+        description: sanitizeRichText(body.description),
         api_documentation: body.apiDocumentation,
         features: body.features || [],
         highlights: body.highlights || [],
-        challenges: body.challenges,
-        solutions: body.solutions,
-        story: body.story,
+        challenges: sanitizeRichText(body.challenges),
+        solutions: sanitizeRichText(body.solutions),
+        story: sanitizeRichText(body.story),
         outcomes: body.outcomes || [],
         skills: body.skills,
         repo_links: body.repoLinks || [],

@@ -120,7 +120,6 @@ export default function LoginPage() {
               height={50}
               className="object-contain"
             />
-            {/* </div> */}
           </div>
           <Typography.Title level={3} style={{ marginBottom: 4 }}>
             {t("auth.title")}

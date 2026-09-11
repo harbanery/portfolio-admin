@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   applicationName: META_APP,
   ...(META_DESCRIPTION && { description: META_DESCRIPTION }),
   metadataBase: new URL(BASE_URL),
+  // Aplikasi admin privat: jangan diindeks mesin pencari.
+  robots: { index: false, follow: false },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -36,15 +38,7 @@ export const metadata: Metadata = {
     countryName: "Indonesia",
     locale: "en-US",
     url: `/`,
-    images: [
-      {
-        url: `images/opengraph-image.png`,
-        alt: META_TITLE,
-        type: "image/png",
-        width: 1200,
-        height: 630,
-      },
-    ],
+    // Gambar OG dihasilkan dinamis oleh src/app/opengraph-image.tsx.
   },
   creator: "Raihan Yusuf",
   authors: [
@@ -117,6 +111,7 @@ export default function RootLayout({
           </LocaleProvider>
         </AntdRegistry>
         <VercelCompatibleComponents.Analytics />
+        <VercelCompatibleComponents.SpeedInsights />
       </body>
     </html>
   );

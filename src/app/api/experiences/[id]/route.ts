@@ -1,6 +1,7 @@
 import prisma from "@/server/db";
 import { requireAuth } from "@/server/auth";
 import { deleteCloudinaryUrls } from "@/server/cloudinary";
+import { sanitizeRichText } from "@/server/sanitize";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -57,7 +58,7 @@ export async function PUT(
         job_title: body.jobTitle,
         company_name: body.companyName,
         employment_type: body.employmentType || "FULL_TIME",
-        description: body.description,
+        description: sanitizeRichText(body.description),
         skills: body.skills || [],
         images: body.images || [],
         start_date: new Date(body.startDate),

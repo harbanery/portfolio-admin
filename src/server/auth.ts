@@ -270,7 +270,13 @@ export function sessionCookieOptions(expiresAt: Date) {
     path: "/",
     secure: process.env.NODE_ENV === "production",
     httpOnly: true,
-    sameSite: "lax" as const,
+    /**
+     * `strict`: cookie tidak dikirim saat request berasal dari situs
+     * lain (link dari web eksternal/email). Aplikasi admin single-user
+     * tidak butuh navigasi cross-site membawa sesi, jadi strict
+     * meminimalkan risiko CSRF.
+     */
+    sameSite: "strict" as const,
   };
 }
 

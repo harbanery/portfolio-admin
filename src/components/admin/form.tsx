@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useState, useCallback } from "react";
+import { ReactNode, useCallback } from "react";
 import Editor from "@/components/custom/editor";
 import {
   Form,
@@ -18,6 +18,8 @@ import DatePicker from "antd/es/date-picker";
 import { InboxOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useLocale } from "@/components/locale/LocaleProvider";
 import { UploadFileLike } from "@/helpers/image";
+import { getAntdIcon } from "@/components/custom/icon";
+import SmartImage from "@/components/custom/smart-image";
 import {
   FormAdminProps,
   FormLayout,
@@ -25,44 +27,8 @@ import {
 } from "@/models/form";
 
 /* ------------------------------------------------------------------ */
-/*  Icon cache – preload once, then render from cache without hooks     */
+/*  Icon resolution – sinkron dari registry (tree-shaken imports)      */
 /* ------------------------------------------------------------------ */
-
-type IconComponent = React.ComponentType<{
-  style?: React.CSSProperties;
-  className?: string;
-}>;
-
-const antdIconCache: Record<string, IconComponent | null> = {};
-
-async function ensureIcon(iconName: string): Promise<void> {
-  if (antdIconCache[iconName]) return;
-  try {
-    const mod = (await import("@ant-design/icons")) as unknown as Record<
-      string,
-      IconComponent | undefined
-    >;
-    antdIconCache[iconName] = mod[iconName] ?? null;
-  } catch {
-    antdIconCache[iconName] = null;
-  }
-}
-
-function getCachedIcon(iconName: string): IconComponent | null {
-  return antdIconCache[iconName] ?? null;
-}
-
-/** Collect unique icon names from a layout config */
-function collectIconNames(layout: FormLayout[]): string[] {
-  const names = new Set<string>();
-  for (const section of layout) {
-    if (section.hidden) continue;
-    for (const item of section.items) {
-      if (item.icon) names.add(item.icon);
-    }
-  }
-  return Array.from(names);
-}
 
 /** Ambil storagePath dari file hasil upload antd (lokal atau response). */
 function getStoragePath(file: unknown): string | null {
@@ -152,8 +118,8 @@ function renderField(params: RenderFieldParams): ReactNode {
       tpl = placeholder;
   }
 
-  /* Resolve icon prefix from cache (no hooks) */
-  const IconComp = icon ? getCachedIcon(icon) : null;
+  /* Resolve icon prefix secara sinkron dari registry ikon statis. */
+  const IconComp = icon ? getAntdIcon(icon) : null;
   const prefixNode = IconComp ? <IconComp style={{ marginRight: 4 }} /> : null;
 
   switch (type) {
@@ -219,7 +185,15 @@ function renderField(params: RenderFieldParams): ReactNode {
           }}
         >
           {value && typeof value === "string" ? (
-            <img src={value} alt="Uploaded" className="w-full h-full max-h-50 object-contain rounded-md" />
+            <div className="relative h-50 w-full">
+              <SmartImage
+                src={value}
+                alt="Uploaded"
+                fill
+                sizes="400px"
+                className="object-contain rounded-md"
+              />
+            </div>
           ) : (
             <>
               <p className="ant-upload-drag-icon"><InboxOutlined /></p>
@@ -318,22 +292,8 @@ const FormAdmin = ({
   uploadFolder,
 }: FormAdminProps) => {
   const { t } = useLocale();
-  /* State hanya untuk memicu re-render setelah ikon selesai dimuat. */
-  const [, setIconsReady] = useState(false);
 
   const form = Form.useFormInstance();
-
-  /* Preload all icons needed by the layout so renderField can use the cache.
-     Promise.all selalu async (termasuk untuk daftar kosong) sehingga
-     setState tidak pernah dipanggil sinkron dalam effect. */
-  useEffect(() => {
-    let cancelled = false;
-    const iconNames = collectIconNames(layout);
-    Promise.all(iconNames.map(ensureIcon)).then(() => {
-      if (!cancelled) setIconsReady(true);
-    });
-    return () => { cancelled = true; };
-  }, [layout]);
 
   const renderContactList = useCallback(
     (item: FormLayoutItem, fp: FormProps) => {

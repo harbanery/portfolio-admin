@@ -67,6 +67,10 @@ function applyLocale(next: Locale): void {
   } catch {
     // ignore
   }
+  // Sinkronkan atribut lang agar sesuai locale aktif (aksesibilitas).
+  if (typeof document !== "undefined") {
+    document.documentElement.lang = next;
+  }
   emitLocale();
 }
 

@@ -20,6 +20,12 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Endpoint cron meng-autentikasi sendiri via CRON_SECRET (Bearer
+  // token), bukan cookie sesi — Vercel Cron tidak memegang cookie.
+  if (pathname.startsWith("/api/cron/")) {
+    return NextResponse.next();
+  }
+
   // API lain: butuh cookie sesi (validasi penuh tetap di route handler).
   if (pathname.startsWith("/api")) {
     if (!hasSessionCookie) {
@@ -36,6 +42,17 @@ export function proxy(request: NextRequest) {
     if (hasSessionCookie) {
       return NextResponse.redirect(new URL("/", request.url));
     }
+    return NextResponse.next();
+  }
+
+  // Aset yang dihasilkan Next.js dan bersifat publik (robots.txt untuk
+  // crawler, sitemap.xml, dan OG image untuk preview social media) tetap
+  // bisa diakses tanpa sesi.
+  if (
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml" ||
+    pathname.startsWith("/opengraph-image")
+  ) {
     return NextResponse.next();
   }
 

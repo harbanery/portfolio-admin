@@ -6,6 +6,11 @@ import {
   resolveUploadFolder,
   signCloudinaryParams,
 } from "@/server/cloudinary";
+import {
+  MAX_DOCUMENT_SIZE,
+  MAX_IMAGE_SIZE,
+  validateUploadFile,
+} from "@/server/upload";
 
 export async function POST(request: NextRequest) {
   if (!(await requireAuth())) {
@@ -24,6 +29,25 @@ export async function POST(request: NextRequest) {
     if (!file || !(file instanceof File)) {
       return NextResponse.json(
         { success: false, error: "No file uploaded" },
+        { status: 400 },
+      );
+    }
+
+    // Validasi server-side: whitelist tipe + ekstensi + batas ukuran.
+    // (Client memeriksa hal yang sama via beforeUpload, tapi request
+    // bisa dibuat langsung tanpa UI.)
+    const validation = validateUploadFile(file);
+    if (!validation.ok) {
+      const maxMb =
+        validation.kind === "image"
+          ? MAX_IMAGE_SIZE / (1024 * 1024)
+          : MAX_DOCUMENT_SIZE / (1024 * 1024);
+      const error =
+        validation.code === "TOO_LARGE"
+          ? `File exceeds the ${maxMb}MB size limit`
+          : "File type is not allowed (images: jpg/png/webp/gif, documents: pdf/doc/docx)";
+      return NextResponse.json(
+        { success: false, code: validation.code, error },
         { status: 400 },
       );
     }
@@ -48,7 +72,7 @@ export async function POST(request: NextRequest) {
     const timestamp = Date.now();
     const filename = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
 
-    const isImage = file.type.startsWith("image/");
+    const isImage = validation.kind === "image";
     // Gunakan endpoint `image` untuk gambar dan `raw` untuk dokumen
     // (PDF/Microsoft Word). Resource `raw` disimpan apa adanya sehingga
     // file dikirim sebagai byte asli.
@@ -100,8 +124,13 @@ export async function POST(request: NextRequest) {
     );
 
     if (!cloudinaryResponse.ok) {
-      const errorData = await cloudinaryResponse.json();
-      throw new Error(errorData.error?.message || "Cloudinary upload failed");
+      // Detail error Cloudinary hanya dicatat di log server; client
+      // hanya menerima pesan generik (jangan bocorkan error internal).
+      const errorData = await cloudinaryResponse.json().catch(() => null);
+      throw new Error(
+        errorData?.error?.message ||
+          `Cloudinary upload failed (HTTP ${cloudinaryResponse.status})`,
+      );
     }
 
     const cloudinaryData = await cloudinaryResponse.json();
@@ -120,15 +149,11 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : "Unknown error";
+    // Log lengkap untuk observability server; respons client generik.
     console.error("Upload error:", error);
 
     return NextResponse.json(
-      {
-        success: false,
-        error: `Failed to upload file: ${message}`,
-      },
+      { success: false, code: "UPLOAD_FAILED", error: "Failed to upload file" },
       { status: 500 },
     );
   }
@@ -168,14 +193,9 @@ export async function DELETE(request: NextRequest) {
       message: "Successfully deleted asset from Cloudinary",
     });
   } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : "Unknown error";
     console.error("Delete error:", error);
     return NextResponse.json(
-      {
-        success: false,
-        error: `Failed to delete file: ${message}`,
-      },
+      { success: false, code: "DELETE_FAILED", error: "Failed to delete file" },
       { status: 500 },
     );
   }

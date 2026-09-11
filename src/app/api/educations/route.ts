@@ -1,5 +1,6 @@
 import prisma from "@/server/db";
 import { requireAuth } from "@/server/auth";
+import { sanitizeRichText } from "@/server/sanitize";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
         start_date: new Date(body.startDate),
         end_date: body.endDate ? new Date(body.endDate) : null,
         grade: body.grade,
-        description: body.description,
+        description: sanitizeRichText(body.description),
         courses: Array.isArray(body.courses) ? body.courses : [],
         status: "ACTIVE",
       },

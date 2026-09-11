@@ -2,7 +2,7 @@
 
 import FormAdmin from "@/components/admin/form";
 import { loadAntdIcon } from "@/components/custom/icon";
-import { App, Button, Form, Modal, Card, Tag, Empty, Image } from "antd";
+import { App, Button, Form, Modal, Card, Tag, Empty } from "antd";
 import { useEffect, useState } from "react";
 import LoaderPage from "@/components/admin/loader";
 import { modalBodyProps } from "@/helpers/modal";
@@ -11,6 +11,7 @@ import { menuProjectType, menuRole } from "@/helpers/menu";
 import { skillsOptions } from "@/helpers/skills";
 import { getGithubRepoName } from "@/helpers";
 import { getImageString, getImagesArray } from "@/helpers/image";
+import SmartImage from "@/components/custom/smart-image";
 import { useLocale } from "@/components/locale/LocaleProvider";
 import { FormLayout } from "@/models/form";
 import dayjs from "dayjs";
@@ -672,17 +673,16 @@ const ProjectDecorator = ({ formLayout }: { formLayout: FormLayout[] }) => {
                         </div>
 
                         <div
-                          className="aspect-video w-full overflow-hidden rounded-md"
+                          className="relative aspect-video w-full overflow-hidden rounded-md"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {item.image ? (
-                            <Image
-                              preview={{
-                                actionsRender: () => [],
-                              }}
+                            <SmartImage
                               src={item.image}
                               alt={item.title}
-                              className="!h-full !w-full !object-cover"
+                              fill
+                              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                              className="object-cover"
                             />
                           ) : (
                             <div className="flex aspect-video h-full w-full items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 dark:border-zinc-700 dark:bg-zinc-900">
