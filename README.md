@@ -54,29 +54,42 @@ When I started building my portfolio, the original plan was to combine the portf
 - **Rate limiting** per IP via a `LoginAttempt` table: 5 failed attempts block login for 15 minutes.
 - **Password generator (development only)** — the old password is deleted, a strong new one is randomized server-side, delivered through a rich HTML email via **Nodemailer** SMTP, and all active sessions are revoked.
 - **Full CRUD** for personal, experiences, projects, certifications, educations, publications, and CV — including primary-CV selection and ACTIVE/NONACTIVE toggles.
-- **Dashboard** with content statistics and charts (Recharts).
+- **Dashboard** with content statistics summary cards per entity (active counts).
 - **Cloudinary media management** — uploads land in per-menu folders (`admin-portfolio/projects`, `admin-portfolio/experiences`, …), and assets are deleted from Cloudinary when a record is removed or its file is replaced.
-- **PDF delivery proxy** (`/api/file`) that serves PDFs stored with a masked extension and guards against SSRF by allow-listing the account's Cloudinary host.
+- **PDF delivery proxy** (`/api/admin/file`) that serves PDFs stored with a masked extension and guards against SSRF by allow-listing the account's Cloudinary host.
 - **Excel import** (SheetJS) with template download for bulk data entry.
 - **Drag-and-drop reordering** (dnd-kit) for projects and similar ordered content.
 - **Bilingual UI** (Indonesian/English) with a runtime language toggle, plus light/dark theme switching.
-- **Analytics** with Vercel Analytics.
+- **Security hardening** — strict CSP/HSTS security headers, server-side HTML sanitization for rich text (anti-XSS), and upload validation (size limits + file-type whitelist).
+- **Vercel Analytics & Speed Insights** — only the public login page is tracked, so private admin traffic never pollutes the stats.
+- **Cron housekeeping** — a daily Vercel cron job (`/api/cron/housekeeping`) clears expired sessions and stale login attempts, guarded by `CRON_SECRET`.
+- **SEO & observability** — dynamic OG image (`next/og`), robots/sitemap for a private app, and structured server error logging via `instrumentation.ts`.
 - **Linting** with **ESLint** for maintaining code quality.
 
 ### Project Structure
 
 ```
 src/
-├── app/          # Routes & pages (App Router) — (web) admin pages, api/, login/
-├── assets/       # Global styles
-├── components/   # UI components (admin, custom, locale, theme, vercel)
-├── config/       # Environment variables & app constants
-├── helpers/      # Pure helper functions
-├── models/       # Shared form & domain types
-├── server/       # Server-only code (db, auth, email, cloudinary)
-├── utils/        # Utilities (fonts)
-└── proxy.ts      # Route protection proxy (Next.js 16)
+├── app/                # Routes & pages (App Router)
+│   ├── (auth)/         # Login page
+│   ├── (panel)/        # Admin pages — dashboard (home) + CRUD menus,
+│   │                   # each menu: page.tsx + decorator/ + config/
+│   └── api/            # Route handlers — auth/, admin/ (panel APIs),
+│                       # cron/ (scheduled), upload/ (Cloudinary)
+├── assets/             # Global styles & fonts
+├── components/         # Global shared UI — i18n/, ui/theme/, ui/vercel/
+├── features/admin/     # Admin feature module — components/ui (form, loader,
+│                       # editor, icon, clock, smart-image), components/layout
+│                       # (shell: header, sider, content, footer), utils/, types.ts
+├── lib/                # Server-only integrations — prisma, auth, cloudinary, email
+├── utils/              # config/ (env), helpers/, server/ (sanitize, upload),
+│                       # email/, fonts/
+├── instrumentation.ts  # Observability — register() + onRequestError()
+└── proxy.ts            # Route protection proxy (Next.js 16)
 ```
+
+The fully annotated structure (with placement rules) lives in
+[`public/docs/structure-admin-portfolio.txt`](public/docs/structure-admin-portfolio.txt).
 
 ## License
 
@@ -97,7 +110,6 @@ Feel free to check it out:
 - [Cloudinary](https://cloudinary.com/)
 - [Nodemailer](https://nodemailer.com/)
 - [dnd-kit](https://dndkit.com/)
-- [Recharts](https://recharts.org/)
 - [SheetJS](https://sheetjs.com/)
 - [Vercel](https://vercel.com/)
 - [Img Shields](https://shields.io)
