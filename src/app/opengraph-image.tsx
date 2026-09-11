@@ -3,7 +3,7 @@ import {
   META_TITLE,
   META_DESCRIPTION,
   BASE_URL,
-} from "@/config/variables";
+} from "@/utils/config/variables";
 
 /**
  * OG image dinamis (file convention Next.js).

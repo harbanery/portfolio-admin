@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/server/db";
+import prisma from "@/lib/prisma";
 
 /**
  * Cron job housekeeping database (dipanggil Vercel Cron, lihat vercel.json).

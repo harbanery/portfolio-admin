@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { NODE_ENV } from "@/config/variables";
-import { applyNewAdminPassword, generateAdminPassword, getClientIp } from "@/server/auth";
-import { buildPasswordEmail } from "@/server/passwordEmail";
-import { isEmailConfigured, sendEmail } from "@/server/email";
+import { NODE_ENV } from "@/utils/config/variables";
+import { applyNewAdminPassword, generateAdminPassword, getClientIp } from "@/lib/auth";
+import { buildPasswordEmail } from "@/utils/email/credentialEmail";
+import { isEmailConfigured, sendEmail } from "@/lib/email";
 
 /**
  * POST /api/auth/generate-password

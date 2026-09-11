@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import prisma from "@/server/db";
+import prisma from "@/lib/prisma";
 import {
   clearFailedAttempts,
   createSession,
@@ -10,7 +10,7 @@ import {
   recordFailedAttempt,
   sessionCookieOptions,
   verifyLoginPassword,
-} from "@/server/auth";
+} from "@/lib/auth";
 
 /** Konversi sisa waktu blokir ke menit (minimal 1). */
 function toRemainingMinutes(blockedUntil: Date | null | undefined): number {

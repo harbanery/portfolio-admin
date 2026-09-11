@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateSession } from "@/server/auth";
-import { SESSION_COOKIE_NAME } from "@/config/variables";
+import { validateSession } from "@/lib/auth";
+import { SESSION_COOKIE_NAME } from "@/utils/config/variables";
 
 /**
  * GET /api/auth/session

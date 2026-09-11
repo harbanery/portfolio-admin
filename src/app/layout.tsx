@@ -1,17 +1,17 @@
 import "@/assets/global/index.css";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import type { Metadata, Viewport } from "next";
-import { ThemeProvider } from "@/components/theme/ThemeProvider";
-import { LocaleProvider } from "@/components/locale/LocaleProvider";
+import { ThemeProvider } from "@/components/ui/theme/ThemeProvider";
+import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { geistSans, geistMono } from "@/utils/fonts/next-google";
 import {
   META_TITLE,
   META_APP,
   META_DESCRIPTION,
   BASE_URL,
-} from "@/config/variables";
+} from "@/utils/config/variables";
 import { neueHaasDisplay } from "@/utils/fonts/next-local";
-import { VercelCompatibleComponents } from "@/components/vercel";
+import { VercelCompatibleComponents } from "@/components/ui/vercel";
 
 export const metadata: Metadata = {
   title: META_TITLE,

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { destroySession } from "@/server/auth";
-import { SESSION_COOKIE_NAME } from "@/config/variables";
+import { destroySession } from "@/lib/auth";
+import { SESSION_COOKIE_NAME } from "@/utils/config/variables";
 
 /**
  * POST /api/auth/logout

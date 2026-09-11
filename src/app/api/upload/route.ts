@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/server/auth";
+import { requireAuth } from "@/lib/auth";
 import {
   destroyCloudinaryAsset,
   publicIdFromUrl,
   resolveUploadFolder,
   signCloudinaryParams,
-} from "@/server/cloudinary";
+} from "@/lib/cloudinary";
 import {
   MAX_DOCUMENT_SIZE,
   MAX_IMAGE_SIZE,
   validateUploadFile,
-} from "@/server/upload";
+} from "@/utils/server/upload";
 
 export async function POST(request: NextRequest) {
   if (!(await requireAuth())) {
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
      * "deny or ACL failure") ketika setting keamanan "Allow delivery of
      * PDF and ZIP files" nonaktif. Sebagai workaround, PDF disimpan
      * dengan ekstensi .docx (isi file tetap PDF apa adanya) sehingga
-     * tetap bisa dideliver; proxy /api/file menyajikannya kembali
+     * tetap bisa dideliver; proxy /api/admin/file menyajikannya kembali
      * sebagai PDF (Content-Type application/pdf + nama file asli).
      */
     let storedFilename = filename;

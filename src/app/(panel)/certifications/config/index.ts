@@ -1,0 +1,57 @@
+import { FormLayout } from "@/features/admin/types";
+
+export const formLayout: FormLayout[] = [
+  {
+    key: "main",
+    items: [
+      {
+        name: "title",
+        type: "input",
+        required: true,
+      },
+      {
+        name: "issuer",
+        type: "input",
+        required: true,
+      },
+      {
+        name: "category",
+        type: "select",
+        required: true,
+      },
+      {
+        name: "issue_date",
+        type: "month",
+        required: true,
+      },
+      {
+        name: "expiry_date",
+        type: "month",
+        required: false,
+      },
+      {
+        name: "credential_id",
+        type: "input",
+        required: false,
+      },
+      {
+        name: "credential_url",
+        type: "input",
+        placeholder: "https://...",
+        required: false,
+      },
+      {
+        name: "file_upload",
+        type: "file_upload",
+        accept:
+          ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        required: false,
+      },
+      {
+        name: "skills",
+        type: "select_multiple",
+        required: false,
+      },
+    ],
+  },
+];

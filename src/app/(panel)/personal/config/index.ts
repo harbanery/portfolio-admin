@@ -1,0 +1,78 @@
+import { FormLayout } from "@/features/admin/types";
+
+export const formLayout: FormLayout[] = [
+  {
+    key: "main",
+    titleKey: "personal.section.main",
+    items: [
+      {
+        name: "name",
+        type: "input",
+        required: true,
+      },
+      {
+        name: "about",
+        type: "editor",
+      },
+      {
+        name: "availability",
+        type: "select",
+        required: true,
+      },
+      {
+        name: "open_to",
+        type: "select_multiple",
+        required: false,
+      },
+    ],
+  },
+  {
+    key: "languages",
+    titleKey: "personal.section.languages",
+    items: [
+      {
+        name: "languages",
+        type: "language_list",
+        isList: true,
+      },
+    ],
+  },
+  {
+    key: "images",
+    titleKey: "personal.section.images",
+    hidden: true,
+    items: [
+      {
+        name: "images",
+        type: "image_upload",
+      },
+    ],
+  },
+  {
+    key: "skills",
+    titleKey: "personal.section.skills",
+    items: [
+      {
+        name: "skills",
+        type: "select_multiple",
+        required: true,
+      },
+      {
+        name: "priority_skills",
+        type: "select_multiple",
+        required: false,
+      },
+    ],
+  },
+  {
+    key: "contact",
+    titleKey: "personal.section.contact",
+    items: [
+      {
+        name: "contacts",
+        type: "contact_list",
+        isList: true,
+      },
+    ],
+  },
+];

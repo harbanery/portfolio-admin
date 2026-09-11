@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { BASE_URL } from "@/config/variables";
+import { BASE_URL } from "@/utils/config/variables";
 
 /**
  * robots.txt dinamis.
