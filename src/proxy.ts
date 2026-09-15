@@ -48,11 +48,7 @@ export function proxy(request: NextRequest) {
   // Aset yang dihasilkan Next.js dan bersifat publik (robots.txt untuk
   // crawler, sitemap.xml, dan OG image untuk preview social media) tetap
   // bisa diakses tanpa sesi.
-  if (
-    pathname === "/robots.txt" ||
-    pathname === "/sitemap.xml" ||
-    pathname.startsWith("/opengraph-image")
-  ) {
+  if (pathname === "/robots.txt" || pathname === "/sitemap.xml") {
     return NextResponse.next();
   }
 

@@ -38,7 +38,15 @@ export const metadata: Metadata = {
     countryName: "Indonesia",
     locale: "en-US",
     url: `/`,
-    // Gambar OG dihasilkan dinamis oleh src/app/opengraph-image.tsx.
+    images: [
+      {
+        url: `images/opengraph-image.png`,
+        alt: META_TITLE,
+        type: "image/png",
+        width: 1200,
+        height: 630,
+      },
+    ],
   },
   creator: "Raihan Yusuf",
   authors: [
